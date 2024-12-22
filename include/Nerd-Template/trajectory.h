@@ -19,7 +19,7 @@ private:
     void generate_from_raw(UnprocessedTrajectory& raw);
     
     static State compute_state(float u, float velocity, UnprocessedTrajectory& raw);
-    static float compute_velocity(float u, float s, float segment_length, float remaining_distance, UnprocessedTrajectory& raw);
+    static float compute_velocity(float u, float s, float segment_length, float distance_traveled, float remaining_distance, UnprocessedTrajectory& raw);
     static float advance_param_by_distance(float u_start, float ds, const UnprocessedTrajectory& raw);
     static std::vector<float> compute_centripetal_parameter(const std::vector<Vector2> &points);
     static void compute_natural_cubic_spline(const std::vector<float> &t, const std::vector<float> &y, std::vector<float> &a, std::vector<float> &b, std::vector<float> &c, std::vector<float> &d);

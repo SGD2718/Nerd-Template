@@ -217,7 +217,7 @@ TrajectoryConfig& TrajectoryConfig::set_full_speed_turn_radius(float r) {
 }
 
 TrajectoryConfig& TrajectoryConfig::set_deceleration_distance(float d) {
-    this->deceleration_distance = d;
+    this->acceleration_distance = d;
     return *this;
 }
 
@@ -311,7 +311,7 @@ RAMSETEConfig& RAMSETEConfig::set_full_speed_turn_radius(float r) {
 }
 
 RAMSETEConfig& RAMSETEConfig::set_deceleration_distance(float d) {
-    this->deceleration_distance = d;
+    this->acceleration_distance = d;
     return *this;
 }
 

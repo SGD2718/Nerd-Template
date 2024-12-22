@@ -18,14 +18,10 @@ Trajectory::Trajectory(const std::vector<Waypoint>& waypoints, const TrajectoryC
         raw.velocity_keyframes.emplace_back(wp.v);
     }
     raw.path = compute_cubic_beziers_from_waypoints(points);
-
     this->generate_from_raw(raw);
 }
 
 State Trajectory::sample(float t) const {
-    if (t >= this->duration)
-        return this->trajectory.back();
-
     t /= this->dt;
     auto i = (int)t;
     t -= (float)i;
@@ -61,24 +57,25 @@ void Trajectory::generate_from_raw(UnprocessedTrajectory& raw) {
     float current_length = 0.0f;
 
     for (step = 0; step < max_steps; ++step) {
-        float v = compute_velocity(u, s, current_segment_length, total_length - (current_length + s), raw);
+        float v = compute_velocity(u, s, current_segment_length, (current_length + s),
+                                   total_length - (current_length + s), raw);
         this->trajectory.emplace_back(compute_state(u, v, raw));
 
         // Check if we've basically finished
-        if (u >= (float)raw.path.size())
+        if (u >= (float) raw.path.size())
             break;
-        
+
         // update
         float ds = v * raw.velocity_ratio;
         s += ds;
-        
+
         float u_next = advance_param_by_distance(u, ds, raw);
-        if ((int)u_next > (int)u) {
+        if ((int) u_next > (int) u) {
             s -= current_segment_length;
             current_length += current_segment_length;
-            current_segment_length = segment_lengths[(int)u_next];
+            current_segment_length = segment_lengths[(int) u_next];
         }
-        
+
         u = u_next;
     }
 
@@ -104,27 +101,38 @@ State Trajectory::compute_state(float u, float velocity, UnprocessedTrajectory& 
     return {{pos, theta}, {velocity, omega}};
 }
 
-float Trajectory::compute_velocity(float u, float s, float segment_length, float remaining_distance, UnprocessedTrajectory& raw) {
-    if (u >= (float)raw.path.size())
+float Trajectory::compute_velocity(float u, float s, float segment_length, float distance_traveled, float remaining_distance, UnprocessedTrajectory& raw) {
+    if (u >= (float) raw.path.size())
         return 0;
 
-    auto i = (int)u;
-    u -= (float)i;
+    auto i = (int) u;
+    u -= (float) i;
 
     // v_max = kv * sqrt(curvature).
-    float v_curvature = fmaxf(raw.config.min_target_velocity, raw.kv * sqrtf(fabsf(raw.path[i].radius_of_curvature(u))));
+    float v = fmaxf(raw.config.min_target_velocity,
+                    raw.kv * sqrtf(fabsf(raw.path[i].radius_of_curvature(u))));
 
     // v_f^2 = v_i^2 + 2ad => a = (v_f^2 - v_i^2) / 2d
     // v^2 = v_i^2 + 2as = v_i^2 + 2s(v_f^2 - v_i^2) / 2d = v_i^2 + (s/d)(v_f^2 - v_i^2) => v = sqrt[v_i^2 + (s/d)(v_f^2 - v_i^2)]
     float v_i2 = raw.velocity_keyframes[i] * raw.velocity_keyframes[i];
-    float v_f2 = raw.velocity_keyframes[i+1] * raw.velocity_keyframes[i+1];
-    float v_profile = fmaxf(raw.config.min_target_velocity, sqrtf(v_i2 + (s / segment_length) * (v_f2 - v_i2)));
-
-    if (remaining_distance < raw.config.deceleration_distance)
+    float v_f2 = raw.velocity_keyframes[i + 1] * raw.velocity_keyframes[i + 1];
+    v = fminf(v, fmaxf(raw.config.min_target_velocity, sqrtf(v_i2 + (s / segment_length) * (v_f2 - v_i2))));
+    
+    // end deceleration
+    if (remaining_distance < raw.config.acceleration_distance)
         // v = sqrt[v_max^2 + (1 - s / d)(0 - v_max^2)] = v_max * sqrt(1 - (1 - s / d)) = v_max * sqrt(s / d)
-        v_profile = fminf(v_profile, raw.config.max_target_velocity * sqrtf(remaining_distance / raw.config.deceleration_distance));
+        v = fminf(v, raw.config.max_target_velocity *
+                     sqrtf(remaining_distance / raw.config.acceleration_distance));
+    
+    // start acceleration
+    if (distance_traveled < raw.config.acceleration_distance && v > raw.config.min_target_velocity) {
+        // v = sqrt[v_min^2 + (s/d)(v_max^2 - v_min^2)] = v_max * sqrt(s/d)
+        auto v_min2 = raw.config.min_target_velocity * raw.config.min_target_velocity;
+        auto v_max2 = raw.config.max_target_velocity * raw.config.max_target_velocity;
+        v = fminf(v, sqrtf(v_min2 + (distance_traveled / raw.config.acceleration_distance) * (v_max2 - v_min2)));
+    }
 
-    return fminf(v_curvature, v_profile);
+    return v;
 }
 
 // The key function to move along the spline by ds

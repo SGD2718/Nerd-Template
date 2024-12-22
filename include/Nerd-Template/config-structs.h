@@ -148,7 +148,7 @@ struct HolonomicDriveToPointConfig {
 
 struct TrajectoryConfig {
     float max_full_speed_turn_radius = 36.0f;
-    float deceleration_distance = 8.0f;
+    float acceleration_distance = 8.0f;
     float max_speed_in_per_sec = 20.625 * M_PI;
     float min_target_velocity = 3.0f;
     float max_target_velocity = 12.0f;
