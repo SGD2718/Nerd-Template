@@ -20,23 +20,21 @@ public:
     float get_remaining_distance() const;
     float get_target_velocity() const;
     float get_look_ahead_distance() const;
-    bool is_settled() const;
+    bool is_settled(float current = 0.0f) const;
 
     void print_logs() const;
 
     FollowConfig config;
 private:
-    float time_spent_running = 0;
-    float time_spent_settled = 0;
-    float previous_drive_output = 0;
-
     int look_ahead_index = 0; // index of the endpoint of the segment containing the look ahead point
     int nearest_index = 0;    // index of the endpoint of the segment nearest to the robot
     float look_ahead_interpolation_parameter = 0;
     float nearest_interpolation_parameter = 0;
+    float previous_drive_output = 0;
 
     PID drivePID;
     PID headingPID;
+    Settle settle;
 
     float get_look_ahead_distance(float velocity) const;
     float get_heading_error(Vector2 robot_position, float robot_heading) const;

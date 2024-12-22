@@ -17,7 +17,6 @@ PurePursuit::PurePursuit(Vector2 robot_position, float robot_heading, std::vecto
 }
 
 void PurePursuit::compute(Vector2 robot_position, float robot_heading, float &drive_output, float &heading_output) {
-    this->time_spent_running += 10.0f;
     float old_error = this->drivePID.previous_error;
 
     // update points
@@ -64,12 +63,7 @@ void PurePursuit::compute(Vector2 robot_position, float robot_heading, float &dr
         this->config.heading_pid.max_output);
 
     // check settle conditions
-    if (fabsf(drive_error) <= this->config.settle_conditions.settle_error) {
-        this->time_spent_settled += 10;
-        heading_output = 0;
-    } else {
-        this->time_spent_settled = 0;
-    }
+    this->settle.update(drive_error);
 }   
 
 Vector2 PurePursuit::get_look_ahead_point() const {
@@ -119,12 +113,8 @@ float PurePursuit::get_drive_error(Vector2 robot_position) const {
     return (robot_position - this->waypoints.back()).norm();
 }
 
-bool PurePursuit::is_settled() const {
-    return 
-        this->time_spent_settled >= this->config.settle_conditions.settle_time ||
-        this->time_spent_running >= this->config.settle_conditions.timeout ||
-        chassis.DriveL.current() >= this->config.settle_conditions.max_current ||
-        chassis.DriveR.current() >= this->config.settle_conditions.max_current;
+bool PurePursuit::is_settled(float current) const {
+    return this->settle.is_exit(current);
 }
 
 void PurePursuit::generate_velocity_profile() {

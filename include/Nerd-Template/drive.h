@@ -19,13 +19,13 @@ enum drive_setup: int {
 class Drive
 {
 private:
-  float max_velocity_in_per_sec;
   float wheel_diameter;
-  float wheel_ratio;
   float motor_rpm;
   float drive_rpm;
+  float wheel_ratio;
   float gyro_scale;
   float drive_in_to_deg_ratio;
+  float max_velocity_in_per_sec;
   float ForwardTracker_center_distance;
   float ForwardTracker_diameter;
   float ForwardTracker_in_to_deg_ratio;
@@ -162,7 +162,7 @@ public:
 
   void turn_to_angle(float angle, const TurnConfig& config = {});
 
-  void drive_time(float time, float voltage, bool stop = true);
+  void drive_time(float time, float left_voltage, float right_voltage, bool stop = true);
   //void drive_distance(float distance);
   //void drive_distance(float distance, float heading);
   void drive_distance(float distance, float heading, float drive_timeout);
@@ -225,7 +225,7 @@ public:
   void follow(const std::vector<Waypoint>& path, const RAMSETEConfig& config = {}, const VelocityControllerConfig& velocity_controller_config = DRIVE_VELOCITY_DEFAULT); // follow with RAMSETE
 
   //void follow(const std::vector<Vector2>& path);
-  void follow(const std::vector<Vector2>& path, const FollowConfig& config = {});
+  void follow(const std::vector<Vector2>& path, const FollowConfig& config);
   
   void turn_to_point(float X_position, float Y_position);
   void turn_to_point(float X_position, float Y_position, float extra_angle_deg);
