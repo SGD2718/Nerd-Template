@@ -21,7 +21,7 @@
 			],
 			"compilerPath": "${vex_compilerPath}",
 			"cStandard": "gnu99",
-			"cppStandard": "gnu++20",
+			"cppStandard": "gnu++17",
 			"intelliSenseMode": "windows-clang-x86"
 		},
 		{
@@ -31,8 +31,8 @@
 			],
 			"compilerPath": "${vex_compilerPath}",
 			"cStandard": "gnu99",
-			"cppStandard": "gnu++20",
-			"intelliSenseMode": "macos-clang-x86"
+			"cppStandard": "gnu++17",
+			"intelliSenseMode": "macos-clang-arm64"
 		},
 		{
 			"name": "Linux",
@@ -41,7 +41,7 @@
 			],
 			"compilerPath": "",
 			"cStandard": "gnu99",
-			"cppStandard": "gnu++20",
+			"cppStandard": "gnu++17",
 			"intelliSenseMode": "linux-clang-x86"
 		}
 	],
