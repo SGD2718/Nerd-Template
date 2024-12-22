@@ -139,6 +139,7 @@ public:
   float get_right_position_in();
 
   float get_current();
+  float get_holonomic_current();
 
   void set_turn_constants(float turn_max_voltage, float turn_kp, float turn_ki, float turn_kd, float turn_starti); 
   void set_drive_constants(float drive_max_voltage, float drive_kp, float drive_ki, float drive_kd, float drive_starti);
@@ -221,11 +222,10 @@ public:
   void follow(const std::vector<Vector2>& path, float follow_timeout, bool make_smooth, float follow_max_voltage, float heading_max_voltage, float ld, float follow_settle_error, float follow_settle_time);
   void follow(const std::vector<Vector2>& path, float follow_timeout, bool make_smooth, float follow_max_voltage, float heading_max_voltage, float ld, float follow_settle_error, float follow_settle_time, float follow_mu, float drive_kp, float drive_ki, float drive_kd, float drive_starti, float heading_kp, float heading_ki, float heading_kd, float heading_starti);
 
-  void follow(const std::vector<Waypoint>& path, const RAMSETEConfig& config); // follow with RAMSETE
-  void follow(const std::vector<Waypoint>& path, const RAMSETEConfig& config, const VelocityControllerConfig& velocity_controller_config); // follow with RAMSETE
+  void follow(const std::vector<Waypoint>& path, const RAMSETEConfig& config = {}, const VelocityControllerConfig& velocity_controller_config = DRIVE_VELOCITY_DEFAULT); // follow with RAMSETE
 
   //void follow(const std::vector<Vector2>& path);
-  void follow(const std::vector<Vector2>& path, const FollowConfig& config);
+  void follow(const std::vector<Vector2>& path, const FollowConfig& config = {});
   
   void turn_to_point(float X_position, float Y_position);
   void turn_to_point(float X_position, float Y_position, float extra_angle_deg);
@@ -242,6 +242,9 @@ public:
   void holonomic_drive_to_point(float X_position, float Y_position, float angle, float drive_timeout, float drive_max_voltage, float heading_max_voltage);
   void holonomic_drive_to_point(float X_position, float Y_position, float angle, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time);
   void holonomic_drive_to_point(float X_position, float Y_position, float angle, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time, float drive_kp, float drive_ki, float drive_kd, float drive_starti, float heading_kp, float heading_ki, float heading_kd, float heading_starti);
+
+  void holonomic_drive_to_point(const Vector2& pos, const HolonomicDriveToPointConfig& config);
+  void holonomic_drive_to_point(const Pose& pose, const HolonomicDriveToPointConfig& config);
 
   void control_arcade(float tFwd = 5, float tTurn = 10);
   void control_tank(float t = 10);

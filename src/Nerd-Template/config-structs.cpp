@@ -402,3 +402,33 @@ FollowConfig& FollowConfig::set_settle_conditions(const SettleConfig& settle) {
     settle_conditions = settle;
     return *this;
 }
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_drive_max_voltage(float voltage) {
+    this->drive_pid.max_output = voltage;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_turn_max_voltage(float voltage) {
+    this->turn_pid.max_output = voltage;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_drive_pid(const PIDConfig& pid) {
+    this->drive_pid = pid;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_turn_pid(const PIDConfig& pid) {
+    this->turn_pid = pid;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_drive_settle_conditions(const SettleConfig& settle) {
+    this->drive_settle_conditions = settle;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_turn_settle_conditions(const SettleConfig& settle) {
+    this->turn_settle_conditions = settle;
+    return *this;
+}

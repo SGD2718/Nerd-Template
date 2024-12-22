@@ -63,6 +63,13 @@ float Drive::get_current() {
     return fmaxf(this->DriveL.current(), this->DriveR.current());
 }
 
+float Drive::get_holonomic_current() {
+    return fmaxf(
+        fmaxf(this->DriveLF.current(), this->DriveRF.current()),
+        fmaxf(this->DriveLB.current(), this->DriveRB.current())
+    );
+}
+
 void Drive::drive_with_voltage(float leftVoltage, float rightVoltage){
     DriveL.spin(fwd, leftVoltage, volt);
     DriveR.spin(fwd, rightVoltage, volt);
@@ -747,10 +754,6 @@ void Drive::follow(const std::vector<Vector2>& path, float follow_timeout, bool 
     }
 }
 
-void Drive::follow(const std::vector<Waypoint>& waypoints, const RAMSETEConfig& config) {
-    this->follow(waypoints, config, this->velocity_controller_config);
-}
-
 void Drive::follow(const std::vector<Waypoint>& waypoints, const RAMSETEConfig& config, const VelocityControllerConfig& velocity_controller_config) {
     Trajectory trajectory(waypoints, config);
     VelocityController left_velocity_controller(0, velocity_controller_config);
@@ -832,6 +835,10 @@ void Drive::turn_to_point(float X_position, float Y_position, float extra_angle_
 }
 
 
+void Drive::turn_to_point(const Vector2& pos, const TurnConfig& config) {
+    this->turn_to_point(pos, 0, config);
+}
+
 void Drive::turn_to_point(const Vector2& pos, float extra_angle_deg, const TurnConfig& config){
     if (this->stop_auton) return;
     PID turnPID(reduce_negative_180_to_180(to_deg((pos - this->get_position()).heading()) - get_absolute_heading() + extra_angle_deg), config.turn_pid, config.settle_conditions);
@@ -894,6 +901,65 @@ void Drive::holonomic_drive_to_point(float X_position, float Y_position, float a
     DriveLB.stop(hold);
     DriveRB.stop(hold);
     DriveRF.stop(hold);
+}
+
+void Drive::holonomic_drive_to_point(const Vector2& pos, const HolonomicDriveToPointConfig& config) {
+    this->holonomic_drive_to_point({pos, this->desired_heading}, config);
+}
+
+void Drive::holonomic_drive_to_point(const Vector2& pos, const HolonomicDriveToPointConfig& config) {
+    this->holonomic_drive_to_point({pos, this->desired_heading}, config);
+}
+
+void Drive::holonomic_drive_to_point(const Pose& pose, const HolonomicDriveToPointConfig& config) {
+    if (this->stop_auton) return;
+
+    auto error = pose - this->get_pose();
+    PID drivePID(error.norm(), config.drive_pid, config.drive_settle_conditions);
+    PID turnPID(reduce_negative_180_to_180(error.theta), config.turn_pid, config.turn_settle_conditions);
+    
+    while(!this->stop_auton && !( drivePID.is_settled(this->get_holonomic_current()) && turnPID.is_settled(this->get_holonomic_current()) ) ){
+        auto error = pose - this->get_pose();
+        
+        float drive_error = error.norm();
+        float turn_error = reduce_negative_180_to_180(error.theta);
+
+        float drive_output = drivePID.compute(drive_error);
+        float turn_output = turnPID.compute(turn_error);
+
+        drive_output = clamp(drive_output, drive_max_voltage, drive_max_voltage);
+        turn_output = clamp(turn_output, -heading_max_voltage, heading_max_voltage);
+
+        auto cosine_scale = fabsf(cosf(2 * to_rad(turn_error)));
+        auto drive_vector = error.rescale(drive_output * 0.5f * cosine_scale);
+
+        auto cos_theta = cosf(to_rad(this->get_absolute_heading()));
+        auto sin_theta = sinf(to_rad(this->get_absolute_heading()));
+        
+        auto NE_component = drive_vector.y + drive_vector.x;
+        auto NW_component = drive_vector.y - drive_vector.x;
+
+        auto NW_output = cos_theta * NE_component + sin_theta * NW_component;
+        auto NE_output = sin_theta * NE_component - cos_theta * NW_component;
+
+        DriveLF.spin(fwd, NE_output + turn_output, volt);
+        DriveLB.spin(fwd, NW_output + turn_output, volt);
+        DriveRB.spin(fwd, NE_output - turn_output, volt);
+        DriveRF.spin(fwd, NW_output - turn_output, volt);
+        task::sleep(10);
+    }
+
+    if (!this->stop_auton) {
+        DriveLF.stop(hold);
+        DriveLB.stop(hold);
+        DriveRB.stop(hold);
+        DriveRF.stop(hold);
+    } else {
+        DriveLF.setStopping(coast);
+        DriveLB.setStopping(coast);
+        DriveRB.setStopping(coast);
+        DriveRF.setStopping(coast);
+    }
 }
 
 float joystick_curve(float value, float t) {

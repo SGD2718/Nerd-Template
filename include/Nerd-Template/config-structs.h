@@ -132,6 +132,20 @@ struct DriveToPointConfig {
     DriveToPointConfig& set_settle_conditions(const SettleConfig& settle);
 };
 
+struct HolonomicDriveToPointConfig {
+    PIDMotionConfig drive_pid = DRIVE_PID_DEFAULT;
+    PIDMotionConfig turn_pid = TURN_PID_DEFAULT;
+    SettleConfig drive_settle_conditions = MOVE_ODOM_SETTLE_DEFAULT;
+    SettleConfig turn_settle_conditions = TURN_SETTLE_DEFAULT;
+
+    HolonomicDriveToPointConfig& set_drive_max_voltage(float voltage);
+    HolonomicDriveToPointConfig& set_turn_max_voltage(float voltage);
+    HolonomicDriveToPointConfig& set_drive_pid(const PIDConfig& pid);
+    HolonomicDriveToPointConfig& set_turn_pid(const PIDConfig& pid);
+    HolonomicDriveToPointConfig& set_drive_settle_conditions(const SettleConfig& settle);
+    HolonomicDriveToPointConfig& set_turn_settle_conditions(const SettleConfig& settle);
+};
+
 struct TrajectoryConfig {
     float max_full_speed_turn_radius = 36.0f;
     float deceleration_distance = 8.0f;
