@@ -1,0 +1,37 @@
+#include "vex.h"
+
+
+Settle::Settle(const SettleConfig& config, float dt): settle_error(config.settle_error), settle_time(config.settle_time), timeout(config.timeout), max_current(config.max_current), dt(roundf(dt)) {}
+    
+void Settle::update(float error) {
+    if (error < this->settle_error)
+        this->time_spent_settled += this->dt;
+    else   
+        this->time_spent_settled = 0;
+    
+    this->time_spent_running += this->dt;
+}
+
+bool Settle::is_settled() const {
+    return this->settle_error != 0 && this->time_spent_settled > this->settle_time;
+}
+
+bool Settle::is_early_stop(float current) const {
+    return (this->timeout != 0 && this->time_spent_running > this->timeout) || current > this->max_current;
+}
+
+bool Settle::is_exit(float current) const {
+    return this->is_settled() || this->is_early_stop(current);
+}
+
+float Settle::get_time_spent_running() const {
+    return this->time_spent_running;
+}
+
+float Settle::get_time_spent_settled() const {
+    return this->time_spent_settled;
+}
+
+float Settle::get_dt() const {
+    return this->dt;
+}
