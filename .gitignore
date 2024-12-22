@@ -1,3 +1,11 @@
 /bin
 /build
 compile_commands.json
+
+/include/lady-brown.h
+/include/mogo-mech.h
+/include/intake.h
+
+/src/lady-brown.cpp
+/src/mogo-mech.cpp
+/src/intake.cpp
