@@ -17,18 +17,16 @@ RAMSETE::RAMSETE(RAMSETEConfig config) :
 SteerCommand RAMSETE::compute(const Pose &robot_pose, const State &target) const {
     // compute error
     auto error = target - robot_pose;
-    error = error.rotate(to_rad(robot_pose.theta));
+    error = error.rotate(-to_rad(robot_pose.theta)); // rotate to the robot's reference frame
 
     // compute dynamic gains
-    const auto k1 = 2.0f * this->zeta * sqrtf(target.omega * target.omega + this->b * target.v * target.v);
-    const auto k2 = this->k2_b + this->k2_v_weight * target.v;
-    const auto k3 = this->k3_b + this->k3_omega_weight * target.omega;
+    const auto k = 2.0f * this->zeta * sqrtf(target.omega * target.omega + this->b * target.v * target.v);
 
     // compute outputs
-    const auto velocity = target.v * cosf(error.theta) + k1 * error.x;
+    const auto velocity = target.v * cosf(error.theta) + k * error.x;
 
     const auto theta_factor = (fabsf(error.theta) < 1e-4f) ? 1.f - error.theta * error.theta / 6.f : sinf(error.theta) / error.theta; // used taylor series for numerical stability for small θ
-    const auto angular_velocity = target.omega + k2 * target.v * theta_factor + k3 * error.theta;
+    const auto angular_velocity = target.omega + k * error.theta + this->b * target.v * theta_factor * error.y;
 
     return {velocity, angular_velocity};
 }
