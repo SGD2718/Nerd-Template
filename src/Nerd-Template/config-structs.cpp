@@ -132,6 +132,26 @@ TurnConfig& TurnConfig::set_settle_conditions(const SettleConfig& settle) {
     return *this;
 }
 
+TurnConfig& TurnConfig::set_settle_error(float e) {
+    this->settle_conditions.settle_error = e;
+    return *this;
+}
+
+TurnConfig& TurnConfig::set_settle_time(float t) {
+    this->settle_conditions.settle_time = t;
+    return *this;
+}
+
+TurnConfig& TurnConfig::set_timeout(float t) {
+    this->settle_conditions.timeout = t;
+    return *this;
+}
+
+TurnConfig& TurnConfig::set_max_current(float I) {
+    this->settle_conditions.max_current = I;
+    return *this;
+}
+
 
 SwingConfig& SwingConfig::set_turn_max_voltage(float voltage) {
     this->swing_pid.max_output = voltage;
@@ -145,6 +165,26 @@ SwingConfig& SwingConfig::set_heading_pid(const PIDConfig& pid) {
 
 SwingConfig& SwingConfig::set_settle_conditions(const SettleConfig& settle) {
     this->settle_conditions = settle;
+    return *this;
+}
+
+SwingConfig& SwingConfig::set_settle_error(float e) {
+    this->settle_conditions.settle_error = e;
+    return *this;
+}
+
+SwingConfig& SwingConfig::set_settle_time(float t) {
+    this->settle_conditions.settle_time = t;
+    return *this;
+}
+
+SwingConfig& SwingConfig::set_timeout(float t) {
+    this->settle_conditions.timeout = t;
+    return *this;
+}
+
+SwingConfig& SwingConfig::set_max_current(float I) {
+    this->settle_conditions.max_current = I;
     return *this;
 }
 
@@ -171,6 +211,26 @@ DriveDistanceConfig& DriveDistanceConfig::set_heading_pid(const PIDConfig& pid) 
 
 DriveDistanceConfig& DriveDistanceConfig::set_settle_conditions(const SettleConfig& settle) {
     this->settle_conditions = settle;
+    return *this;
+}
+
+DriveDistanceConfig& DriveDistanceConfig::set_settle_error(float e) {
+    this->settle_conditions.settle_error = e;
+    return *this;
+}
+
+DriveDistanceConfig& DriveDistanceConfig::set_settle_time(float t) {
+    this->settle_conditions.settle_time = t;
+    return *this;
+}
+
+DriveDistanceConfig& DriveDistanceConfig::set_timeout(float t) {
+    this->settle_conditions.timeout = t;
+    return *this;
+}
+
+DriveDistanceConfig& DriveDistanceConfig::set_max_current(float I) {
+    this->settle_conditions.max_current = I;
     return *this;
 }
 
@@ -210,6 +270,146 @@ DriveToPointConfig& DriveToPointConfig::set_settle_conditions(const SettleConfig
     return *this;
 }
 
+DriveToPointConfig& DriveToPointConfig::set_settle_error(float e) {
+    this->settle_conditions.settle_error = e;
+    return *this;
+}
+
+DriveToPointConfig& DriveToPointConfig::set_settle_time(float t) {
+    this->settle_conditions.settle_time = t;
+    return *this;
+}
+
+DriveToPointConfig& DriveToPointConfig::set_timeout(float t) {
+    this->settle_conditions.timeout = t;
+    return *this;
+}
+
+DriveToPointConfig& DriveToPointConfig::set_max_current(float I) {
+    this->settle_conditions.max_current = I;
+    return *this;
+}
+
+
+DriveToPoseConfig::DriveToPoseConfig(float lead_distance): lead_distance(lead_distance) {}
+
+DriveToPoseConfig& DriveToPoseConfig::set_direction(Direction dir) {
+    this->direction = dir;
+    return *this;
+}
+
+DriveToPoseConfig& DriveToPoseConfig::set_lead_distance(float d_lead) {
+    this->lead_distance = d_lead;
+    return *this;
+}
+
+DriveToPoseConfig& DriveToPoseConfig::set_drive_max_voltage(float voltage) {
+    this->drive_pid.max_output = voltage;
+    return *this;
+}
+
+DriveToPoseConfig& DriveToPoseConfig::set_heading_max_voltage(float voltage) {
+    this->heading_pid.max_output = voltage;
+    return *this;
+}
+
+DriveToPoseConfig& DriveToPoseConfig::set_drive_pid(const PIDConfig& pid) {
+    this->drive_pid = pid;
+    return *this;
+}
+
+DriveToPoseConfig& DriveToPoseConfig::set_heading_pid(const PIDConfig& pid) {
+    this->heading_pid = pid;
+    return *this;
+}
+
+DriveToPoseConfig& DriveToPoseConfig::set_settle_conditions(const SettleConfig& settle) {
+    this->settle_conditions = settle;
+    return *this;
+}
+
+DriveToPoseConfig& DriveToPoseConfig::set_settle_error(float error) {
+    this->settle_conditions.settle_error = error;
+    return *this;
+}
+
+DriveToPoseConfig& DriveToPoseConfig::set_settle_time(float time) {
+    this->settle_conditions.settle_time = time;
+    return *this;
+}
+
+DriveToPoseConfig& DriveToPoseConfig::set_timeout(float time) {
+    this->settle_conditions.timeout = time;
+    return *this;
+}
+
+DriveToPoseConfig& DriveToPoseConfig::set_max_current(float I) {
+    this->settle_conditions.max_current = I;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_drive_max_voltage(float voltage) {
+    this->drive_pid.max_output = voltage;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_turn_max_voltage(float voltage) {
+    this->turn_pid.max_output = voltage;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_drive_pid(const PIDConfig& pid) {
+    this->drive_pid = pid;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_turn_pid(const PIDConfig& pid) {
+    this->turn_pid = pid;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_drive_settle_conditions(const SettleConfig& settle) {
+    this->drive_settle_conditions = settle;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_turn_settle_conditions(const SettleConfig& settle) {
+    this->turn_settle_conditions = settle;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_drive_settle_error(float e) {
+    this->drive_settle_conditions.settle_error = e;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_drive_settle_time(float t) {
+    this->drive_settle_conditions.settle_time = t;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_turn_settle_error(float e) {
+    this->turn_settle_conditions.settle_error = e;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_turn_settle_time(float t) {
+    this->turn_settle_conditions.settle_time = t;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_timeout(float t) {
+    this->drive_settle_conditions.timeout = t;
+    this->turn_settle_conditions.timeout = t;
+    return *this;
+}
+
+HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_max_current(float I) {
+    this->drive_settle_conditions.max_current = I;
+    this->turn_settle_conditions.max_current = I;
+    return *this;
+}
+
 
 TrajectoryConfig& TrajectoryConfig::set_full_speed_turn_radius(float r) {
     this->max_full_speed_turn_radius = r;
@@ -241,37 +441,31 @@ TrajectoryConfig& TrajectoryConfig::set_dt(float dt) {
     return *this;
 }
 
+RAMSETEConfig::RAMSETEConfig(float b, float zeta):
+        b(b), zeta(zeta) {}
 
-RAMSETEConfig::RAMSETEConfig() {
-    this->settle_error = 0.1875;
-    this->settle_time = 150;
-    this->timeout = 500; 
-}
-
-RAMSETEConfig::RAMSETEConfig(float b, float zeta, float k2_v_weight, float k2_b_weight, float k3_omega_weight, float k3_b_weight):
-        b(b), zeta(zeta), k2_v_weight(k2_v_weight), k2_b_weight(k2_b_weight), k3_omega_weight(k3_omega_weight), k3_b_weight(k3_b_weight) {
-    this->settle_error = 0.1875;
-    this->settle_time = 150;
-    this->timeout = 500; 
+RAMSETEConfig& RAMSETEConfig::set_settle_conditions(const SettleConfig& settle) {
+    this->settle_conditions = settle;
+    return *this;
 }
 
 RAMSETEConfig& RAMSETEConfig::set_settle_error(float e) {
-    this->settle_error = e;
+    this->settle_conditions.settle_error = e;
     return *this;
 }
 
 RAMSETEConfig& RAMSETEConfig::set_settle_time(float t) {
-    this->settle_time = t;
+    this->settle_conditions.settle_time = t;
     return *this;
 }
 
 RAMSETEConfig& RAMSETEConfig::set_timeout(float t) {
-    this->timeout = t;
+    this->settle_conditions.timeout = t;
     return *this;
 }
 
 RAMSETEConfig& RAMSETEConfig::set_max_current(float I) {
-    this->max_current = I;
+    this->settle_conditions.max_current = I;
     return *this;
 }
 
@@ -285,53 +479,46 @@ RAMSETEConfig& RAMSETEConfig::set_zeta(float damping) {
     return *this;
 }
 
-RAMSETEConfig& RAMSETEConfig::set_k2_v_weight(float w) {
-    this->k2_v_weight = w;
-    return *this;
+RAMSETEConfig& RAMSETEConfig::set_convergence_rate(float convergence_rate) {
+    return this->set_b(convergence_rate);
 }
 
-RAMSETEConfig& RAMSETEConfig::set_k2_b_weight(float w) {
-    this->k2_b_weight = w;
-    return *this;
+RAMSETEConfig& RAMSETEConfig::set_damping(float damping) {
+    return this->set_zeta(damping);
 }
 
-RAMSETEConfig& RAMSETEConfig::set_k3_omega_weight(float w) {
-    this->k3_omega_weight = w;
-    return *this;
-}
-
-RAMSETEConfig& RAMSETEConfig::set_k3_b_weight(float w) {
-    this->k3_b_weight = w;
+RAMSETEConfig& RAMSETEConfig::set_trajectory_config(const TrajectoryConfig& config) {
+    this->trajectory_config = config;
     return *this;
 }
 
 RAMSETEConfig& RAMSETEConfig::set_full_speed_turn_radius(float r) {
-    this->max_full_speed_turn_radius = r;
+    this->trajectory_config.max_full_speed_turn_radius = r;
     return *this;
 }
 
 RAMSETEConfig& RAMSETEConfig::set_deceleration_distance(float d) {
-    this->acceleration_distance = d;
+    this->trajectory_config.acceleration_distance = d;
     return *this;
 }
 
 RAMSETEConfig& RAMSETEConfig::set_max_speed_in_per_sec(float v) {
-    this->max_speed_in_per_sec = v;
+    this->trajectory_config.max_speed_in_per_sec = v;
     return *this;
 }
 
 RAMSETEConfig& RAMSETEConfig::set_max_target_velocity(float v) {
-    this->max_target_velocity = v;
+    this->trajectory_config.max_target_velocity = v;
     return *this;
 }
 
 RAMSETEConfig& RAMSETEConfig::set_min_target_velocity(float v) {
-    this->min_target_velocity = v;
+    this->trajectory_config.min_target_velocity = v;
     return *this;
 }
 
 RAMSETEConfig& RAMSETEConfig::set_dt(float dt) {
-    this->dt = dt;
+    this->trajectory_config.dt = dt;
     return *this;
 }
 
@@ -403,32 +590,22 @@ FollowConfig& FollowConfig::set_settle_conditions(const SettleConfig& settle) {
     return *this;
 }
 
-HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_drive_max_voltage(float voltage) {
-    this->drive_pid.max_output = voltage;
+FollowConfig& FollowConfig::set_settle_error(float e) {
+    this->settle_conditions.settle_error = e;
     return *this;
 }
 
-HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_turn_max_voltage(float voltage) {
-    this->turn_pid.max_output = voltage;
+FollowConfig& FollowConfig::set_settle_time(float t) {
+    this->settle_conditions.settle_time = t;
     return *this;
 }
 
-HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_drive_pid(const PIDConfig& pid) {
-    this->drive_pid = pid;
+FollowConfig& FollowConfig::set_timeout(float t) {
+    this->settle_conditions.timeout = t;
     return *this;
 }
 
-HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_turn_pid(const PIDConfig& pid) {
-    this->turn_pid = pid;
-    return *this;
-}
-
-HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_drive_settle_conditions(const SettleConfig& settle) {
-    this->drive_settle_conditions = settle;
-    return *this;
-}
-
-HolonomicDriveToPointConfig& HolonomicDriveToPointConfig::set_turn_settle_conditions(const SettleConfig& settle) {
-    this->turn_settle_conditions = settle;
+FollowConfig& FollowConfig::set_max_current(float I) {
+    this->settle_conditions.max_current = I;
     return *this;
 }

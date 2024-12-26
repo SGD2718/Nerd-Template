@@ -199,6 +199,20 @@ public:
   void drive_to_point(float X_position, float Y_position, bool is_rigid, bool is_reverse, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time);
   void drive_to_point(float X_position, float Y_position, bool is_rigid, bool is_reverse, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time, float drive_kp, float drive_ki, float drive_kd, float drive_starti, float heading_kp, float heading_ki, float heading_kd, float heading_starti);
   
+  /**
+   * @brief Drive to pose (x, y, θ) using boomerang.
+   * @param pose: target pose
+   * @param config: motion configuration:
+   *    - direction: forward, reverse, or flexible
+   *    - lead_distance: Interpolation parameter to determine how far between the end point and the robot's position to put the carrot point/look ahead point. 1 means basically at the robot, 0 means at the end point.
+   *    - drive_pid: drive PID configuration
+   *    - drive_max_voltage: maximum voltage use for driving
+   *    - heading_pid: heading PID configuration
+   *    - heading_max_voltage: maximum voltage used to control heading
+   *    - settle_conditions: settle error, settle time, timeout, and max_current.
+  */
+  void drive_to_pose(Pose pose, const DriveToPoseConfig& config = DRIVE_TO_POSE_BOOMERANG_DEFAULT);
+
   /*
   void boomerang(float X_position, float Y_position, float heading, bool reverse = false, float lead_distance = 14);
   void boomerang(float X_position, float Y_position, float heading, bool reverse, float lead_distance, float drive_timeout);
@@ -222,7 +236,7 @@ public:
   void follow(const std::vector<Vector2>& path, float follow_timeout, bool make_smooth, float follow_max_voltage, float heading_max_voltage, float ld, float follow_settle_error, float follow_settle_time);
   void follow(const std::vector<Vector2>& path, float follow_timeout, bool make_smooth, float follow_max_voltage, float heading_max_voltage, float ld, float follow_settle_error, float follow_settle_time, float follow_mu, float drive_kp, float drive_ki, float drive_kd, float drive_starti, float heading_kp, float heading_ki, float heading_kd, float heading_starti);
 
-  void follow(const std::vector<Waypoint>& path, const RAMSETEConfig& config = {}, const VelocityControllerConfig& velocity_controller_config = DRIVE_VELOCITY_DEFAULT); // follow with RAMSETE
+  void follow(const std::vector<Waypoint>& path, RAMSETEConfig config = {}, const VelocityControllerConfig& velocity_controller_config = DRIVE_VELOCITY_DEFAULT); // follow with RAMSETE
 
   //void follow(const std::vector<Vector2>& path);
   void follow(const std::vector<Vector2>& path, const FollowConfig& config);

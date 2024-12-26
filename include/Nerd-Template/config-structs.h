@@ -10,11 +10,13 @@ struct SettleConfig;
 struct PIDConfig;
 struct PIDMotionConfig;
 struct VelocityControllerConfig;
+struct DriveToPointConfig;
 struct FollowConfig;
 struct RAMSETEConfig;
 
 extern SettleConfig DRIVE_SETTLE_DEFAULT;
 extern SettleConfig MOVE_ODOM_SETTLE_DEFAULT;
+extern SettleConfig RAMSETE_SETTLE_DEFAULT; // RAMSETE is a bit special since we can calculate exactly how long the movement should take.
 extern SettleConfig TURN_SETTLE_DEFAULT;
 extern SettleConfig SWING_SETTLE_DEFAULT;
 
@@ -23,6 +25,7 @@ extern PIDMotionConfig HEADING_PID_DEFAULT;
 extern PIDMotionConfig TURN_PID_DEFAULT;
 extern PIDMotionConfig SWING_PID_DEFAULT;
 
+extern DriveToPoseConfig DRIVE_TO_POSE_BOOMERANG_DEFAULT;
 extern FollowConfig FOLLOW_PP_DEFAULT;
 extern RAMSETEConfig FOLLOW_RAMSETE_DEFAULT;
 extern VelocityControllerConfig DRIVE_VELOCITY_DEFAULT;
@@ -51,7 +54,7 @@ struct PIDConfig {
     PIDConfig& set_kp(float val);
     PIDConfig& set_ki(float val);
     PIDConfig& set_kd(float val);
-     PIDConfig& set_integral_range(float range);
+    PIDConfig& set_integral_range(float range);
 };
 
 struct PIDMotionConfig: public PIDConfig {
@@ -93,6 +96,10 @@ struct TurnConfig {
     TurnConfig& set_turn_max_voltage(float voltage);
     TurnConfig& set_heading_pid(const PIDConfig& pid);
     TurnConfig& set_settle_conditions(const SettleConfig& settle);
+    TurnConfig& set_settle_error(float error);
+    TurnConfig& set_settle_time(float time);
+    TurnConfig& set_timeout(float time);
+    TurnConfig& set_max_current(float I);
 };
 
 struct SwingConfig {
@@ -102,6 +109,10 @@ struct SwingConfig {
     SwingConfig& set_turn_max_voltage(float voltage);
     SwingConfig& set_heading_pid(const PIDConfig& pid);
     SwingConfig& set_settle_conditions(const SettleConfig& settle);
+    SwingConfig& set_settle_error(float error);
+    SwingConfig& set_settle_time(float time);
+    SwingConfig& set_timeout(float time);
+    SwingConfig& set_max_current(float I);
 };
 
 struct DriveDistanceConfig {
@@ -114,6 +125,10 @@ struct DriveDistanceConfig {
     DriveDistanceConfig& set_drive_pid(const PIDConfig& pid);
     DriveDistanceConfig& set_heading_pid(const PIDConfig& pid);
     DriveDistanceConfig& set_settle_conditions(const SettleConfig& settle);
+    DriveDistanceConfig& set_settle_error(float error);
+    DriveDistanceConfig& set_settle_time(float time);
+    DriveDistanceConfig& set_timeout(float time);
+    DriveDistanceConfig& set_max_current(float I);
 };
 
 struct DriveToPointConfig {
@@ -130,6 +145,32 @@ struct DriveToPointConfig {
     DriveToPointConfig& set_drive_pid(const PIDConfig& pid);
     DriveToPointConfig& set_heading_pid(const PIDConfig& pid);
     DriveToPointConfig& set_settle_conditions(const SettleConfig& settle);
+    DriveToPointConfig& set_settle_error(float error);
+    DriveToPointConfig& set_settle_time(float time);
+    DriveToPointConfig& set_timeout(float time);
+    DriveToPointConfig& set_max_current(float I);
+};
+
+struct DriveToPoseConfig {
+    float lead_distance = 0.7;
+    Direction direction = FLEXIBLE;
+    PIDMotionConfig drive_pid = DRIVE_PID_DEFAULT;
+    PIDMotionConfig heading_pid = HEADING_PID_DEFAULT;
+    SettleConfig settle_conditions = MOVE_ODOM_SETTLE_DEFAULT;
+
+    DriveToPoseConfig(float lead_distance);
+
+    DriveToPoseConfig& set_direction(Direction dir);
+    DriveToPoseConfig& set_lead_distance(float d_lead);
+    DriveToPoseConfig& set_drive_max_voltage(float voltage);
+    DriveToPoseConfig& set_heading_max_voltage(float voltage);
+    DriveToPoseConfig& set_drive_pid(const PIDConfig& pid);
+    DriveToPoseConfig& set_heading_pid(const PIDConfig& pid);
+    DriveToPoseConfig& set_settle_conditions(const SettleConfig& settle);
+    DriveToPoseConfig& set_settle_error(float error);
+    DriveToPoseConfig& set_settle_time(float time);
+    DriveToPoseConfig& set_timeout(float time);
+    DriveToPoseConfig& set_max_current(float I);
 };
 
 struct HolonomicDriveToPointConfig {
@@ -143,7 +184,13 @@ struct HolonomicDriveToPointConfig {
     HolonomicDriveToPointConfig& set_drive_pid(const PIDConfig& pid);
     HolonomicDriveToPointConfig& set_turn_pid(const PIDConfig& pid);
     HolonomicDriveToPointConfig& set_drive_settle_conditions(const SettleConfig& settle);
+    HolonomicDriveToPointConfig& set_drive_settle_error(float error);
+    HolonomicDriveToPointConfig& set_drive_settle_time(float time);
+    HolonomicDriveToPointConfig& set_timeout(float time);
+    HolonomicDriveToPointConfig& set_max_current(float I);
     HolonomicDriveToPointConfig& set_turn_settle_conditions(const SettleConfig& settle);
+    HolonomicDriveToPointConfig& set_turn_settle_error(float e);
+    HolonomicDriveToPointConfig& set_turn_settle_time(float t);
 };
 
 struct TrajectoryConfig {
@@ -162,27 +209,27 @@ struct TrajectoryConfig {
     TrajectoryConfig& set_dt(float dt);
 };
 
-struct RAMSETEConfig : public TrajectoryConfig, SettleConfig {
+struct RAMSETEConfig {
     float b = 2.0f;
     float zeta = 0.7f;
-    float k2_v_weight = 0.f;
-    float k2_b_weight = 1.f;
-    float k3_omega_weight = 0.f;
-    float k3_b_weight = 1.f;
-    
-    RAMSETEConfig();
-    RAMSETEConfig(float b, float zeta, float k2_v_weight = 0.f, float k2_b_weight = 1.f, float k3_omega_weight = 0.f, float k3_b_weight = 1.f);
 
+    Direction direction = FLEXIBLE;
+    TrajectoryConfig trajectory_config{};
+    SettleConfig settle_conditions = RAMSETE_SETTLE_DEFAULT;
+    
+    RAMSETEConfig() = default;
+    RAMSETEConfig(float b, float zeta);
+
+    RAMSETEConfig& set_b(float convergence_rate);
+    RAMSETEConfig& set_zeta(float damping);
+    RAMSETEConfig& set_convergence_rate(float convergence_rate); // set_b but English
+    RAMSETEConfig& set_damping(float damping);                   // set_zeta but English
+    RAMSETEConfig& set_settle_conditions(const SettleConfig& settle);
     RAMSETEConfig& set_settle_error(float e);
     RAMSETEConfig& set_settle_time(float t);
     RAMSETEConfig& set_timeout(float t);
     RAMSETEConfig& set_max_current(float I);
-    RAMSETEConfig& set_b(float convergence_rate);
-    RAMSETEConfig& set_zeta(float damping);
-    RAMSETEConfig& set_k2_v_weight(float w);
-    RAMSETEConfig& set_k2_b_weight(float w);
-    RAMSETEConfig& set_k3_omega_weight(float w);
-    RAMSETEConfig& set_k3_b_weight(float w);
+    RAMSETEConfig& set_trajectory_config(const TrajectoryConfig& config);
     RAMSETEConfig& set_full_speed_turn_radius(float r);
     RAMSETEConfig& set_deceleration_distance(float d);
     RAMSETEConfig& set_max_speed_in_per_sec(float v);
@@ -220,4 +267,8 @@ struct FollowConfig {
     FollowConfig& set_drive_pid(const PIDMotionConfig& pid);
     FollowConfig& set_heading_pid(const PIDMotionConfig& pid);
     FollowConfig& set_settle_conditions(const SettleConfig& settle);
+    FollowConfig& set_settle_error(float e);
+    FollowConfig& set_settle_time(float t);
+    FollowConfig& set_timeout(float t);
+    FollowConfig& set_max_current(float I);
 };

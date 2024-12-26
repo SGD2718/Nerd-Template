@@ -521,52 +521,47 @@ void Drive::drive_to_point(float X_position, float Y_position, bool is_rigid, bo
     }
 }
 
-/*void Drive::boomerang(float X_position, float Y_position, float heading, bool reverse, float lead_distance) {
-    boomerang(X_position, Y_position, heading, reverse, lead_distance, drive_timeout, drive_max_voltage, heading_max_voltage, drive_settle_error, drive_settle_time, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
-}
-
-void Drive::boomerang(float X_position, float Y_position, float heading, bool reverse, float lead_distance, float drive_timeout, float drive_max_voltage, float heading_max_voltage){
-    boomerang(X_position, Y_position, heading, reverse, lead_distance, drive_timeout, drive_max_voltage, heading_max_voltage, drive_settle_error, drive_settle_time, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
-}
-
-void Drive::boomerang(float X_position, float Y_position, float heading, bool reverse, float lead_distance, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time){
-    boomerang(X_position, Y_position, heading, reverse, lead_distance, drive_timeout, drive_max_voltage, heading_max_voltage, drive_settle_error, drive_settle_time, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
-}
-
-void Drive::boomerang(float X_position, float Y_position, float heading, bool reverse, float lead_distance, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time, float drive_kp, float drive_ki, float drive_kd, float drive_starti, float heading_kp, float heading_ki, float heading_kd, float heading_starti){
+void Drive::drive_to_pose(Pose target, const DriveToPoseConfig& config) {
     if (this->stop_auton) return;
 
-    auto target = Vector2(X_position, Y_position);
-    auto displacement = target - this->get_position();
+    const auto end_tangent = config.lead_distance * Vector2(cosf(to_rad(target.theta)), sinf(to_rad(target.theta)));
+    auto carrot = target.to_vector2() - (target - this->get_position()).norm() * end_tangent;
 
-    PID drivePID(displacement.norm(), drive_kp, drive_ki, drive_kd, drive_starti, drive_settle_error, drive_settle_time, drive_timeout);
-    PID headingPID(reduce_negative_180_to_180(to_deg(displacement.angle()) - get_absolute_heading()), heading_kp, heading_ki, heading_kd, heading_starti, turn_settle_error, turn_settle_time, drive_timeout);
+    PID drivePID((carrot - this->get_position()).norm(), config.drive_pid, config.settle_conditions);
+    PID headingPID(reduce_negative_180_to_180(to_deg((carrot - this->get_position()).heading()) - get_absolute_heading() + (config.direction != REVERSE ? 0.f : 180.f)), config.heading_pid);
 
-    auto target_heading_rad = to_rad(heading);
-    auto carrot_offset = Vector2(cosf(target_heading_rad) * lead_distance, sinf(target_heading_rad) * lead_distance);
-
-    while(!this->stop_auton && (!drivePID.is_settled() || !headingPID.is_settled())){
-        displacement = target - this->get_position();
-        auto carrot = target - displacement.norm() * carrot_offset;
+    while (!this->stop_auton && (!drivePID.is_settled())) {
+        carrot = target.to_vector2() - (target - this->get_position()).norm() * end_tangent;
         auto to_carrot = carrot - this->get_position();
 
-        float heading_error = reduce_negative_180_to_180(heading - get_absolute_heading());
-        float drive_error = (carrot - this->get_position()).norm();
+        float heading_error = reduce_negative_180_to_180(to_deg(to_carrot.heading()) - get_absolute_heading() + (config.direction != REVERSE ? 0.f : 180.f));
+        float drive_error = to_carrot.norm();
         
-        float drive_output = 5 * drivePID.compute(drive_error);
+        float drive_output = drivePID.compute(drive_error);
 
-        //float heading_scale_factor = cos(to_rad(heading_error));
-        //drive_output *= heading_scale_factor;
-        //heading_error = reduce_negative_90_to_90(heading_error);
-        float heading_output = headingPID.compute(heading_error);
+        float cosine_scale = cos(to_rad(heading_error));
+
+        if (drive_error > 2.0) {
+            heading_error = reduce_negative_90_to_90(heading_error);
+            switch (config.direction) {
+                case FORWARD:
+                    cosine_scale = fmaxf(cosine_scale, 0.0f);
+                    break;
+                case REVERSE:
+                    cosine_scale = -fmaxf(cosine_scale, 0.0f);
+                    break;
+                case FLEXIBLE:
+                    break;
+            }
+        }
         
+        float heading_output = headingPID.compute(heading_error);
         if (drive_error<drive_settle_error) { heading_output = 0; }
 
-        float scaled_drive_max_voltage = drive_max_voltage;//fabs(heading_scale_factor)*drive_max_voltage;
-        drive_output = clamp(drive_output, -scaled_drive_max_voltage, scaled_drive_max_voltage);
-        heading_output = clamp(heading_output, -heading_max_voltage, heading_max_voltage);
+        drive_output = clamp(drive_output, -config.drive_pid.max_output, config.drive_pid.max_output) * cosine_scale;
+        heading_output = clamp(heading_output, -config.heading_pid.max_output, config.heading_pid.max_output);
 
-        drive_with_voltage(drive_output-heading_output, drive_output+heading_output);
+        drive_with_voltage(drive_output - heading_output, drive_output + heading_output);
 
         task::sleep(10);
     }
@@ -577,7 +572,7 @@ void Drive::boomerang(float X_position, float Y_position, float heading, bool re
         DriveR.setStopping(coast);
         DriveL.setStopping(coast);
     }
-}*/
+}
 
 void Drive::follow(const std::vector<Vector2>& path, const FollowConfig& config) {
     if (stop_auton) return;
@@ -751,15 +746,16 @@ void Drive::follow(const std::vector<Vector2>& path, float follow_timeout, bool 
     }
 }
 
-void Drive::follow(const std::vector<Waypoint>& waypoints, const RAMSETEConfig& config, const VelocityControllerConfig& velocity_controller_config) {
-    Trajectory trajectory(waypoints, config);
+void Drive::follow(const std::vector<Waypoint>& waypoints, RAMSETEConfig config, const VelocityControllerConfig& velocity_controller_config) {
+    Trajectory trajectory(waypoints, config.trajectory_config.set_max_speed_in_per_sec(this->max_velocity_in_per_sec));
     VelocityController left_velocity_controller(0, velocity_controller_config);
     VelocityController right_velocity_controller(0, velocity_controller_config);
     RAMSETE ramsete(config);
-    Settle settle(config);
+    Settle settle(config.settle_conditions);
     settle.timeout += trajectory.get_duration();
 
     float t = 0;
+    unsigned int dt = roundf(config.trajectory_config.dt);
 
     State target = trajectory.sample(t);
     Pose pose = this->get_pose();
@@ -781,8 +777,8 @@ void Drive::follow(const std::vector<Waypoint>& waypoints, const RAMSETEConfig& 
         this->drive_with_voltage(left_voltage, right_voltage);
         
         // update state
-        task::sleep(roundf(config.dt));
-        t += config.dt;
+        task::sleep(dt);
+        t += dt;
 
         target = trajectory.sample(t);
         pose = this->get_pose();

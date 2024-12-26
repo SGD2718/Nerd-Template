@@ -2,12 +2,6 @@
 #include <iostream>
 #include <sstream>
 
-Auton::Auton(std::string name, std::function<void(void)> auton_function, vex::color display_color): 
-  name(name), auton_function(auton_function), display_color(display_color) {}
-
-Auton::Auton(std::string name, std::function<void(void)> auton_function): 
-  name(name), auton_function(auton_function), display_color(vex::red) {}
-
 // THIS STUFF MAY REQUIRE TUNING
 
 // PID CONSTANTS:
@@ -23,18 +17,22 @@ SettleConfig DRIVE_SETTLE_DEFAULT = {0.25, 150, 3000, 2.5};
 SettleConfig MOVE_ODOM_SETTLE_DEFAULT = {0.5, 150, 5000, 2.5};
 SettleConfig TURN_SETTLE_DEFAULT = {2, 100, 1000, 2.5};
 SettleConfig SWING_SETTLE_DEFAULT = {2, 100, 1000, 2.5};
+SettleConfig RAMSETE_SETTLE_DEFAULT = {0.25, 100, 500, 2.5};
 
 // PATH FOLLOWERS:
 // drive min voltage, max full speed turn radius, max look ahead distance, acceleration distance
 FollowConfig FOLLOW_PP_DEFAULT = {3, 24, 24, 6};
 
-// b (convergence rate/aggressiveness), ζ (damping/smoothness), k2_v, k2_b, k3_ω, k3_b.
-// Note on the last 4 arguments (ONLY FOR ADVANCED USERS): k2 = k2_b*b + k2_v*v, k3 = k3_b*b + k3_ω*ω.
-RAMSETEConfig FOLLOW_RAMSETE_DEFAULT = {2, 0.7, 0, 1, 0, 1};
+// b (convergence rate/aggressiveness), ζ (damping/smoothness)
+RAMSETEConfig FOLLOW_RAMSETE_DEFAULT = {2, 0.7};
+
+// d_lead (between 0 and 1). 1 => more aggressive and bigger arc, 0 => smoother but sudden smaller arc
+DriveToPoseConfig DRIVE_TO_POSE_BOOMERANG_DEFAULT = {0.5};
 
 // CHASSIS VELOCITY CONTROLLER
 // kv, ka, kf, kp, ki, kd, integral range
 VelocityControllerConfig DRIVE_VELOCITY_DEFAULT = {1, 0, 0, 0, 0, 0, 1};
+
 
 void default_constants(){
   chassis.set_drive_constants(10, 1.8, 3.5, 0.1, 2);
@@ -47,6 +45,13 @@ void default_constants(){
   chassis.set_swing_exit_conditions(1, 100, 1000);
   chassis.set_follow_exit_conditions(1, 150, 6000);
 }
+
+
+Auton::Auton(std::string name, std::function<void(void)> auton_function, vex::color display_color): 
+  name(name), auton_function(auton_function), display_color(display_color) {}
+
+Auton::Auton(std::string name, std::function<void(void)> auton_function): 
+  name(name), auton_function(auton_function), display_color(vex::red) {}
 
 
 /*
