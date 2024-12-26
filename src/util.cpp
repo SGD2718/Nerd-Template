@@ -6,27 +6,15 @@
 #include <iostream>
 
 float reduce_0_to_360(float angle) {
-    while(!(angle >= 0 && angle < 360)) {
-        if( angle < 0 ) { angle += 360; }
-        if(angle >= 360) { angle -= 360; }
-    }
-    return(angle);
+    return fmodf(angle, 360.f);
 }
 
 float reduce_negative_180_to_180(float angle) {
-    while(!(angle >= -180 && angle < 180)) {
-        if( angle < -180 ) { angle += 360; }
-        if(angle >= 180) { angle -= 360; }
-    }
-    return(angle);
+    return fmodf(angle + 180.f, 360.f) - 180.f;
 }
 
 float reduce_negative_90_to_90(float angle) {
-    while(!(angle >= -90 && angle < 90)) {
-        if( angle < -90 ) { angle += 180; }
-        if(angle >= 90) { angle -= 180; }
-    }
-    return(angle);
+    return fmodf(angle + 90.f, 180.f) - 90.f;
 }
 
 float to_rad(float angle_deg){
@@ -87,7 +75,7 @@ float integrate(float a, float b, std::function<float(float)> &f, int partitions
 
     float dt = (b-a) / static_cast<float>(partitions);
     float halfDt = dt * 0.5f;
-    float integral = f(a) + f(b) + 4.0f * f(a + halfDt);
+    float integral = f(a) + f(b) + 4.f * f(a + halfDt);
 
     // we are reusing `a` as `x_i` so that we don't need to make another float
     for (int i = 1; i < partitions; ++i) {
@@ -95,7 +83,7 @@ float integrate(float a, float b, std::function<float(float)> &f, int partitions
         integral += 2*f(a) + 4*f(a + halfDt);
     }
 
-    return integral * dt * 0.166667f;
+    return integral * dt * (1.f/6.f);
 }
 
 // For some reason, std::stof is not implemented, so it is being added to the std namespace here
