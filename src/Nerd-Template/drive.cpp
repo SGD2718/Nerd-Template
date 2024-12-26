@@ -765,7 +765,7 @@ void Drive::follow(const std::vector<Waypoint>& waypoints, RAMSETEConfig config,
         auto steer = ramsete.compute(pose, target);
         
         // convert Ackerman inputs to differential drive inputs
-        auto turn = this->width * 0.5 * steer.omega;
+        auto turn = this->width * 0.5f * steer.omega;
         auto left_velocity = steer.v - turn;
         auto right_velocity = steer.v + turn;
 
@@ -783,7 +783,7 @@ void Drive::follow(const std::vector<Waypoint>& waypoints, RAMSETEConfig config,
         target = trajectory.sample(t);
         pose = this->get_pose();
 
-        settle.update(t < trajectory.get_duration() ? std::numeric_limits<float>::infinity() : (target - pose).norm_squared()); // don't let it settle until it reaches the end of the trajectory.
+        settle.update(t < trajectory.get_duration() ? std::numeric_limits<float>::infinity() : (target - pose).norm()); // don't let it settle until it reaches the end of the trajectory.
     }
 
     if (this->stop_auton)
