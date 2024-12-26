@@ -25,11 +25,11 @@ Pose Pose::operator-() const {
 }
 
 Pose Pose::operator+(const Pose& p) const {
-    return {Vector2::operator+(p), this->theta + p.theta};
+    return {Vector2::operator+(p), reduce_negative_180_to_180(this->theta + p.theta)};
 }
 
 Pose Pose::operator-(const Pose& p) const {
-    return {Vector2::operator-(p), this->theta - p.theta};
+    return {Vector2::operator-(p), reduce_negative_180_to_180(this->theta - p.theta)};
 }
 
 Pose Pose::operator+=(const Vector2& v) {
@@ -44,13 +44,13 @@ Pose Pose::operator-=(const Vector2& v) {
 
 Pose Pose::operator+=(const Pose& p) {
     Vector2::operator+=(p);
-    this->theta += p.theta;
+    this->theta = reduce_negative_180_to_180(this->theta + p.theta);
     return *this;
 }
 
 Pose Pose::operator-=(const Pose& p) {
     Vector2::operator-=(p);
-    this->theta -= p.theta;
+    this->theta = reduce_negative_180_to_180(this->theta - p.theta);
     return *this;
 }
 

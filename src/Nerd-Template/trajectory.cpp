@@ -95,10 +95,11 @@ State Trajectory::compute_state(float u, float velocity, UnprocessedTrajectory& 
 
     auto radius_of_curvature = raw.path[i].radius_of_curvature(u);
     auto pos = raw.path[i].position(u);
-    auto theta = to_deg(raw.path[i].first_derivative(u).heading());
-    auto omega = to_deg(raw.velocity_ratio / raw.config.dt * (velocity / radius_of_curvature));
+    auto theta = raw.path[i].first_derivative(u).heading();
+    auto omega = (raw.velocity_ratio / raw.config.dt * 1000.0f) * (velocity / radius_of_curvature);
+    auto v = (velocity / raw.config.max_target_velocity) * raw.config.max_speed_in_per_sec;
 
-    return {{pos, theta}, {velocity, omega}};
+    return {{pos, theta}, {v, omega}};
 }
 
 float Trajectory::compute_velocity(float u, float s, float segment_length, float distance_traveled, float remaining_distance, UnprocessedTrajectory& raw) {

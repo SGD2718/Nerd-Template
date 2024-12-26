@@ -1,25 +1,27 @@
 #include "vex.h"
 
-RAMSETE::RAMSETE(float b, float zeta) : 
-        b(b), 
-        zeta(zeta), 
-        k2_b(b), 
-        k3_b(b) {}
+RAMSETE::RAMSETE(const RAMSETEConfig& config) : 
+        b(config.b),
+        zeta(config.zeta),
+        direction(config.direction),
+        m_per_sec_to_target_velocity_ratio(
+            config.trajectory_config.max_target_velocity / 
+            (config.trajectory_config.max_speed_in_per_sec * 0.0254)) {}
 
-RAMSETE::RAMSETE(RAMSETEConfig config) : 
-        b(config.b), 
-        zeta(config.zeta), 
-        k2_b(config.k2_b_weight * b), 
-        k3_b(config.k3_b_weight * b), 
-        k2_v_weight(config.k2_v_weight), 
-        k3_omega_weight(config.k3_omega_weight) {}
+SteerCommand RAMSETE::compute(Pose robot_pose, State target) const {
+    robot_pose.theta = to_rad(robot_pose.theta);
+    
+    if (this->direction == REVERSE) {
+        target.v = -target.v;
+        target.theta += M_PI;
+    }
 
-SteerCommand RAMSETE::compute(const Pose &robot_pose, const State &target) const {
-    // compute error
+    // compute error in meters and radians
     auto error = target - robot_pose;
-    error = error.rotate(-to_rad(robot_pose.theta)); // rotate to the robot's reference frame
+    error = 0.0254f * error.rotate(-robot_pose.theta);
+    target.v *= 0.0254f;
 
-    // compute dynamic gains
+    // compute dynamic gain
     const auto k = 2.0f * this->zeta * sqrtf(target.omega * target.omega + this->b * target.v * target.v);
 
     // compute outputs
@@ -28,5 +30,5 @@ SteerCommand RAMSETE::compute(const Pose &robot_pose, const State &target) const
     const auto theta_factor = (fabsf(error.theta) < 1e-4f) ? 1.f - error.theta * error.theta / 6.f : sinf(error.theta) / error.theta; // used taylor series for numerical stability for small θ
     const auto angular_velocity = target.omega + k * error.theta + this->b * target.v * theta_factor * error.y;
 
-    return {velocity, angular_velocity};
+    return {velocity * this->m_per_sec_to_target_velocity_ratio, angular_velocity};
 }

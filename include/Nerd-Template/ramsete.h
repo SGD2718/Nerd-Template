@@ -4,17 +4,13 @@
 
 class RAMSETE {
 public:
-    RAMSETE() = default;
-    RAMSETE(float b = 2.0, float zeta = 0.7);
-    RAMSETE(RAMSETEConfig config);
+    RAMSETE(const RAMSETEConfig &config = {});
 
-    SteerCommand compute(const Pose &robot_pose, const State &target) const;
+    SteerCommand compute(Pose robot_pose, State target) const;
 
+    Direction direction = FLEXIBLE;
 private:
-    float b = 2.0f;
-    float zeta = 0.7f;
-    float k2_b = 2.0f;
-    float k3_b = 2.0f;
-    float k2_v_weight = 0.0f;
-    float k3_omega_weight = 0.0f;
+    float b;
+    float zeta;
+    float m_per_sec_to_target_velocity_ratio;
 };
