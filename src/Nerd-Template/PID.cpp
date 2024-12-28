@@ -50,7 +50,7 @@ float PID::compute(float error) {
   return this->output;
 }
 
-bool PID::is_settled(float current){
+bool PID::is_settled(float current) {
   return this->settle.is_exit(current);
 }
 

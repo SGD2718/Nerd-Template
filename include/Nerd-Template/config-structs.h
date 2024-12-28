@@ -11,6 +11,7 @@ struct PIDConfig;
 struct PIDMotionConfig;
 struct VelocityControllerConfig;
 struct DriveToPointConfig;
+struct DriveToPoseConfig;
 struct FollowConfig;
 struct RAMSETEConfig;
 
@@ -152,12 +153,15 @@ struct DriveToPointConfig {
 };
 
 struct DriveToPoseConfig {
-    float lead_distance = 0.7;
+    float lead_distance = 0.6;
     Direction direction = FLEXIBLE;
     PIDMotionConfig drive_pid = DRIVE_PID_DEFAULT;
     PIDMotionConfig heading_pid = HEADING_PID_DEFAULT;
     SettleConfig settle_conditions = MOVE_ODOM_SETTLE_DEFAULT;
+    
+    static bool default_initialized;
 
+    DriveToPoseConfig();
     DriveToPoseConfig(float lead_distance);
 
     DriveToPoseConfig& set_direction(Direction dir);
@@ -216,8 +220,10 @@ struct RAMSETEConfig {
     Direction direction = FLEXIBLE;
     TrajectoryConfig trajectory_config{};
     SettleConfig settle_conditions = RAMSETE_SETTLE_DEFAULT;
+
+    static bool default_initialized;
     
-    RAMSETEConfig() = default;
+    RAMSETEConfig();
     RAMSETEConfig(float b, float zeta);
 
     RAMSETEConfig& set_b(float convergence_rate);
@@ -247,16 +253,20 @@ struct FollowConfig {
     float drive_min_voltage = 3;
     float max_full_speed_turn_radius = 24;
     float acceleration_distance = 6;
-    PIDMotionConfig drive_pid;
-    PIDMotionConfig heading_pid;
-    SettleConfig settle_conditions;
+    PIDMotionConfig drive_pid = DRIVE_PID_DEFAULT;
+    PIDMotionConfig heading_pid = HEADING_PID_DEFAULT;
+    SettleConfig settle_conditions = MOVE_ODOM_SETTLE_DEFAULT;
 
-    // constructor
-    FollowConfig(float drive_min_voltage = 3, float max_full_speed_turn_radius = 24, float max_ld = 24, float acceleration_distance = 6);
+    static bool default_initialized;
+
+    // constructor 
+    FollowConfig();
+    FollowConfig(float max_ld);
 
     // Setters
     FollowConfig& set_direction(Direction dir);
     FollowConfig& set_point_spacing(float spacing);
+    FollowConfig& set_acceleration_distance(float d);
     FollowConfig& set_max_start_deviation(float deviation);
     FollowConfig& set_max_change_per_update(float change);
     FollowConfig& set_max_ld(float ld);

@@ -1,5 +1,20 @@
 #include "vex.h"
 
+SettleConfig DRIVE_SETTLE_DEFAULT;
+SettleConfig MOVE_ODOM_SETTLE_DEFAULT;
+SettleConfig RAMSETE_SETTLE_DEFAULT; // RAMSETE is a bit special since we can calculate exactly how long the movement should take.
+SettleConfig TURN_SETTLE_DEFAULT;
+SettleConfig SWING_SETTLE_DEFAULT;
+
+PIDMotionConfig DRIVE_PID_DEFAULT;
+PIDMotionConfig HEADING_PID_DEFAULT;
+PIDMotionConfig TURN_PID_DEFAULT;
+PIDMotionConfig SWING_PID_DEFAULT;
+
+DriveToPoseConfig DRIVE_TO_POSE_BOOMERANG_DEFAULT;
+FollowConfig FOLLOW_PP_DEFAULT;
+RAMSETEConfig FOLLOW_RAMSETE_DEFAULT;
+VelocityControllerConfig DRIVE_VELOCITY_DEFAULT;
 
 SettleConfig& SettleConfig::set_settle_error(float e) {
     this->settle_error = e;
@@ -291,7 +306,20 @@ DriveToPointConfig& DriveToPointConfig::set_max_current(float I) {
 }
 
 
-DriveToPoseConfig::DriveToPoseConfig(float lead_distance): lead_distance(lead_distance) {}
+bool DriveToPoseConfig::default_initialized = false;
+
+DriveToPoseConfig::DriveToPoseConfig() {
+    if (DriveToPoseConfig::default_initialized)
+        *this = DRIVE_TO_POSE_BOOMERANG_DEFAULT;
+}
+
+DriveToPoseConfig::DriveToPoseConfig(float lead_distance): 
+        lead_distance(lead_distance) {
+    if (DriveToPoseConfig::default_initialized) {
+        *this = DRIVE_TO_POSE_BOOMERANG_DEFAULT;
+        this->lead_distance = lead_distance;
+    }
+}
 
 DriveToPoseConfig& DriveToPoseConfig::set_direction(Direction dir) {
     this->direction = dir;
@@ -441,8 +469,22 @@ TrajectoryConfig& TrajectoryConfig::set_dt(float dt) {
     return *this;
 }
 
+
+bool RAMSETEConfig::default_initialized = false;
+
+RAMSETEConfig::RAMSETEConfig() {
+    if (RAMSETEConfig::default_initialized)
+        *this = FOLLOW_RAMSETE_DEFAULT;
+}
+
 RAMSETEConfig::RAMSETEConfig(float b, float zeta):
-        b(b), zeta(zeta) {}
+        b(b), zeta(zeta) {
+    if (RAMSETEConfig::default_initialized) {
+        *this = FOLLOW_RAMSETE_DEFAULT;
+        this->b = b;
+        this->zeta = zeta;
+    }
+}
 
 RAMSETEConfig& RAMSETEConfig::set_settle_conditions(const SettleConfig& settle) {
     this->settle_conditions = settle;
@@ -522,14 +564,22 @@ RAMSETEConfig& RAMSETEConfig::set_dt(float dt) {
     return *this;
 }
 
-FollowConfig::FollowConfig(float drive_min_voltage, float max_full_speed_turn_radius, float max_ld, float acceleration_distance):
-        drive_min_voltage(drive_min_voltage), max_full_speed_turn_radius(max_full_speed_turn_radius), max_ld(max_ld) {
-    this->drive_pid = DRIVE_PID_DEFAULT;
-    this->heading_pid = HEADING_PID_DEFAULT;
-    this->settle_conditions = MOVE_ODOM_SETTLE_DEFAULT;
+
+bool FollowConfig::default_initialized = false;
+
+FollowConfig::FollowConfig() {
+    if (FollowConfig::default_initialized)
+        *this = FOLLOW_PP_DEFAULT;
 }
 
-// Setters
+FollowConfig::FollowConfig(float max_ld):
+        max_ld(max_ld) {
+    if (FollowConfig::default_initialized) {
+        *this = FOLLOW_PP_DEFAULT;
+        this->max_ld = max_ld;
+    }
+}
+
 FollowConfig& FollowConfig::set_direction(Direction dir) {
     direction = dir;
     return *this;
@@ -572,6 +622,11 @@ FollowConfig& FollowConfig::set_heading_max_voltage(float voltage) {
 
 FollowConfig& FollowConfig::set_max_full_speed_turn_radius(float radius) {
     max_full_speed_turn_radius = radius;
+    return *this;
+}
+
+FollowConfig& FollowConfig::set_acceleration_distance(float d) {
+    this->acceleration_distance = d;
     return *this;
 }
 

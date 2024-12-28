@@ -17,15 +17,6 @@ extern Intake intake;
 
 void default_constants();
 
-struct Auton {
-  Auton(std::string name, std::function<void(void)> auton_function, vex::color display_color);
-  Auton(std::string name, std::function<void(void)> auton_function);
-
-  std::string name;
-  std::function<void(void)> auton_function;
-  vex::color display_color;
-};
-
 void find_tracking_center(float turnVoltage = 6, uint32_t time = 5000);
 void blue_positive();
 void red_positive();
@@ -48,3 +39,16 @@ void full_test();
 void odom_test();
 void tank_odom_test();
 void holonomic_odom_test();
+
+
+
+
+
+struct Auton {
+  Auton(std::string name, std::function<void(void)> auton_function, vex::color display_color);
+  Auton(std::string name, std::function<void(void)> auton_function);
+
+  std::string name;
+  std::function<void(void)> auton_function;
+  vex::color display_color;
+};

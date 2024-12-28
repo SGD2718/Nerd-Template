@@ -46,7 +46,7 @@ Drive::Drive(enum::drive_setup drive_setup, motor_group DriveL, motor_group Driv
         
         this->async_task = vex::task(position_track_task);
         set_coordinates(0,0,90);
-        std::cout << "Chassis Initialized2" << std::endl;
+        std::cout << "Chassis Initialized" << std::endl;
     }
 }
 
@@ -55,7 +55,7 @@ float Drive::get_max_velocity() const {
 }
 
 float Drive::get_current() {
-    return fmaxf(this->DriveL.current(), this->DriveR.current());
+    return fmaxf(this->DriveL.current(), this->DriveR.current()) / 3.f;
 }
 
 float Drive::get_holonomic_current() {
@@ -81,38 +81,6 @@ void Drive::drive_keep_turn_rate(float leftVoltage, float rightVoltage) {
     DriveR.spin(fwd, rightVoltage, volt);
 }
 
-void Drive::set_turn_constants(float turn_max_voltage, float turn_kp, float turn_ki, float turn_kd, float turn_starti){
-    this->turn_max_voltage = turn_max_voltage;
-    this->turn_kp = turn_kp;
-    this->turn_ki = turn_ki;
-    this->turn_kd = turn_kd;
-    this->turn_starti = turn_starti;
-} 
-
-void Drive::set_drive_constants(float drive_max_voltage, float drive_kp, float drive_ki, float drive_kd, float drive_starti){
-    this->drive_max_voltage = drive_max_voltage;
-    this->drive_kp = drive_kp;
-    this->drive_ki = drive_ki;
-    this->drive_kd = drive_kd;
-    this->drive_starti = drive_starti;
-} 
-
-void Drive::set_heading_constants(float heading_max_voltage, float heading_kp, float heading_ki, float heading_kd, float heading_starti){
-    this->heading_max_voltage = heading_max_voltage;
-    this->heading_kp = heading_kp;
-    this->heading_ki = heading_ki;
-    this->heading_kd = heading_kd;
-    this->heading_starti = heading_starti;
-}
-
-void Drive::set_swing_constants(float swing_max_voltage, float swing_kp, float swing_ki, float swing_kd, float swing_starti){
-    this->swing_max_voltage = swing_max_voltage;
-    this->swing_kp = swing_kp;
-    this->swing_ki = swing_ki;
-    this->swing_kd = swing_kd;
-    this->swing_starti = swing_starti;
-} 
-
 void Drive::set_follow_constants(float follow_max_voltage, float follow_max_acceleration, float follow_max_applicable_curvature_radius, float follow_min_ld, float follow_max_ld, float follow_ld) {
     this->follow_max_voltage = follow_max_voltage;
     this->follow_max_acceleration = follow_max_acceleration;
@@ -120,26 +88,6 @@ void Drive::set_follow_constants(float follow_max_voltage, float follow_max_acce
     this->follow_max_ld = follow_max_ld;
     this->follow_ld = follow_ld;
     this->follow_mu = 12.0f / sqrtf(follow_max_applicable_curvature_radius);
-}
-
-void Drive::set_turn_exit_conditions(float turn_settle_error, float turn_settle_time, float turn_timeout){
-    this->turn_settle_error = turn_settle_error;
-    this->turn_settle_time = turn_settle_time;
-    this->turn_timeout = turn_timeout;
-}
-
-void Drive::set_drive_exit_conditions(float drive_settle_error, float drive_settle_time, float drive_timeout, float drive_continue_error, float drive_continue_time){
-    this->drive_settle_error = drive_settle_error;
-    this->drive_settle_time = drive_settle_time;
-    this->drive_timeout = drive_timeout;
-    this->drive_continue_error = drive_continue_error;
-    this->drive_continue_time = drive_continue_time;
-}
-
-void Drive::set_swing_exit_conditions(float swing_settle_error, float swing_settle_time, float swing_timeout){
-    this->swing_settle_error = swing_settle_error;
-    this->swing_settle_time = swing_settle_time;
-    this->swing_timeout = swing_timeout;
 }
 
 void Drive::set_follow_exit_conditions(float follow_settle_error, float follow_settle_time, float follow_timeout) {
@@ -154,6 +102,18 @@ void Drive::set_brake_type(vex::brakeType mode) {
     this->DriveR.setStopping(mode);
 }
 
+float Drive::get_velocity_volts() {
+    return 0.5f * rpm_to_volt(this->DriveL.velocity(rpm) + this->DriveR.velocity(rpm), this->motor_rpm);
+}
+
+float Drive::get_left_velocity_volts() {
+    return rpm_to_volt(this->DriveL.velocity(rpm), this->motor_rpm);
+}
+
+float Drive::get_right_velocity_volts() {
+    return rpm_to_volt(this->DriveR.velocity(rpm), this->motor_rpm);
+}
+
 float Drive::get_absolute_heading(){ 
     return( reduce_0_to_360( Gyro.rotation()*360.0/gyro_scale ) ); 
 }
@@ -164,42 +124,6 @@ float Drive::get_left_position_in(){
 
 float Drive::get_right_position_in(){
     return( DriveR.position(deg) * drive_in_to_deg_ratio );
-}
-
-/*void Drive::turn_to_angle(float angle){
-    turn_to_angle(angle, turn_timeout, turn_max_voltage, turn_settle_error, turn_settle_time, turn_kp, turn_ki, turn_kd, turn_starti);
-}*/
-
-void Drive::turn_to_angle(float angle, float turn_timeout){
-    turn_to_angle(angle, turn_timeout, turn_max_voltage, turn_settle_error, turn_settle_time, turn_kp, turn_ki, turn_kd, turn_starti);
-}
-
-void Drive::turn_to_angle(float angle, float turn_timeout, float turn_max_voltage){
-    turn_to_angle(angle, turn_timeout, turn_max_voltage, turn_settle_error, turn_settle_time, turn_kp, turn_ki, turn_kd, turn_starti);
-}
-
-void Drive::turn_to_angle(float angle, float turn_timeout, float turn_max_voltage, float turn_settle_error, float turn_settle_time){
-    turn_to_angle(angle, turn_timeout, turn_max_voltage, turn_settle_error, turn_settle_time, turn_kp, turn_ki, turn_kd, turn_starti);
-}
-
-void Drive::turn_to_angle(float angle, float turn_timeout, float turn_max_voltage, float turn_settle_error, float turn_settle_time, float turn_kp, float turn_ki, float turn_kd, float turn_starti){
-    if (this->stop_auton) return;
-    desired_heading = angle;
-    PID turnPID(reduce_negative_180_to_180(angle - get_absolute_heading()), turn_kp, turn_ki, turn_kd, turn_starti, turn_settle_error, turn_settle_time, turn_timeout);
-    while (!this->stop_auton && !turnPID.is_settled(this->get_current())){
-        float error = reduce_negative_180_to_180(angle - get_absolute_heading());
-        float output = turnPID.compute(error);
-        output = clamp(output, -turn_max_voltage, turn_max_voltage);
-        drive_with_voltage(-output, output);
-        task::sleep(10);
-    }
-    if (!this->stop_auton) {
-        DriveL.stop(hold);
-        DriveR.stop(hold);
-    } else {
-        DriveR.setStopping(coast);
-        DriveL.setStopping(coast);
-    }
 }
 
 void Drive::turn_to_angle(float angle, const TurnConfig& config) {
@@ -236,55 +160,6 @@ void Drive::stop(brakeType mode) {
     this->DriveLF.stop(mode);
     this->DriveRB.stop(mode);
     this->DriveRF.stop(mode);
-}
-
-/*void Drive::drive_distance(float distance){
-    drive_distance(distance, desired_heading, drive_timeout, drive_max_voltage, heading_max_voltage, drive_settle_error, drive_settle_time, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
-}
-
-void Drive::drive_distance(float distance, float heading){
-    drive_distance(distance, heading, drive_timeout, drive_max_voltage, heading_max_voltage, drive_settle_error, drive_settle_time, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
-}*/
-
-void Drive::drive_distance(float distance, float heading, float drive_timeout){
-    drive_distance(distance, heading, drive_timeout, drive_max_voltage, heading_max_voltage, drive_settle_error, drive_settle_time, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
-}
-
-void Drive::drive_distance(float distance, float heading, float drive_timeout, float drive_max_voltage, float heading_max_voltage) {
-    drive_distance(distance, heading, drive_timeout, drive_max_voltage, heading_max_voltage, drive_settle_error, drive_settle_time, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
-}
-
-void Drive::drive_distance(float distance, float heading, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time){
-    drive_distance(distance, heading, drive_timeout, drive_max_voltage, heading_max_voltage, drive_settle_error, drive_settle_time, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
-}
-
-void Drive::drive_distance(float distance, float heading, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time, float drive_kp, float drive_ki, float drive_kd, float drive_starti, float heading_kp, float heading_ki, float heading_kd, float heading_starti){
-    desired_heading = heading;
-    PID drivePID(distance, drive_kp, drive_ki, drive_kd, drive_starti, drive_settle_error, drive_settle_time, drive_timeout);
-    PID headingPID(reduce_negative_180_to_180(heading - get_absolute_heading()), heading_kp, heading_ki, heading_kd, heading_starti);
-    float start_average_position = (get_left_position_in()+get_right_position_in())/2.0;
-    float average_position = start_average_position;
-    while(!this->stop_auton && !drivePID.is_settled(this->get_current())){
-        average_position = (get_left_position_in()+get_right_position_in())/2.0;
-        float drive_error = distance+start_average_position-average_position;
-        float heading_error = reduce_negative_180_to_180(heading - get_absolute_heading());
-        float drive_output = drivePID.compute(drive_error);
-        float heading_output = headingPID.compute(heading_error);
-
-        drive_output = clamp(drive_output, -drive_max_voltage, drive_max_voltage);
-        heading_output = clamp(heading_output, -heading_max_voltage, heading_max_voltage);
-
-        drive_with_voltage(drive_output-heading_output, drive_output+heading_output);
-        //std::cout << "error = " << drive_error << ", accumulated = " << drivePID.accumulated_error << ", maxirate = " << drivePID.integral_max_rate << std::endl;
-        task::sleep(10);
-    }
-    if (!this->stop_auton) {
-        DriveL.stop(hold);
-        DriveR.stop(hold);
-    } else {
-        DriveR.setStopping(coast);
-        DriveL.setStopping(coast);
-    }
 }
 
 void Drive::drive_distance(float distance, const DriveDistanceConfig& config) {
@@ -412,66 +287,71 @@ Pose Drive::get_pose() {
     return Pose(odom.X_position, odom.Y_position, this->get_absolute_heading());
 }
 
-void Drive::drive_to_point(float X_position, float Y_position, bool is_rigid, bool is_reverse){
-    drive_to_point(X_position, Y_position, is_rigid, is_reverse, drive_timeout, drive_max_voltage, heading_max_voltage, drive_settle_error, drive_settle_time, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
-}
-
-void Drive::drive_to_point(float X_position, float Y_position, bool is_rigid, bool is_reverse, float drive_timeout){
-    drive_to_point(X_position, Y_position, is_rigid, is_reverse, drive_timeout, drive_max_voltage, heading_max_voltage, drive_settle_error, drive_settle_time, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
-}
-
-void Drive::drive_to_point(float X_position, float Y_position, bool is_rigid, bool is_reverse, float drive_timeout, float drive_max_voltage, float heading_max_voltage){
-    drive_to_point(X_position, Y_position, is_rigid, is_reverse, drive_timeout, drive_max_voltage, heading_max_voltage, drive_settle_error, drive_settle_time, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
-}
-
-void Drive::drive_to_point(float X_position, float Y_position, bool is_rigid, bool is_reverse, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time){
-    drive_to_point(X_position, Y_position, is_rigid, is_reverse, drive_timeout, drive_max_voltage, heading_max_voltage, drive_settle_error, drive_settle_time, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
-}
-
-void Drive::drive_to_point(const Vector2& pos, const DriveToPointConfig& config) {
+void Drive::drive_to_point(const Vector2& target, const DriveToPointConfig& config) {
     if (this->stop_auton) return;
 
-    if (config.is_rigid) {
-        this->turn_to_point(pos, config.direction == REVERSE ? 180.0f : 0.0f, TurnConfig().set_turn_max_voltage(12).set_settle_conditions(SettleConfig().set_settle_error(5).set_settle_time(50).set_timeout(500)));
+    auto error_vec = target - this->get_position();
+    float heading_offset;
+
+    switch (config.direction) {
+        case FLEXIBLE:
+            if (fabsf(reduce_negative_180_to_180(error_vec.heading() - this->get_absolute_heading())) > 90)
+                heading_offset = 180.f;
+            else 
+                heading_offset = 0.f;
+            break;
+        case FORWARD:
+            heading_offset = 0;
+            break;
+        case REVERSE:
+            heading_offset = 180.f;
+            break;
     }
 
-    auto vector_to_robot = this->get_position() - pos;
-    PID drivePID(vector_to_robot.norm(), config.drive_pid, config.settle_conditions);
-    PID headingPID(reduce_negative_180_to_180(to_deg(vector_to_robot.heading())-get_absolute_heading()), config.heading_pid);
+    if (config.is_rigid) {
+        this->turn_to_point(target, heading_offset, TurnConfig().set_turn_max_voltage(12).set_settle_conditions(SettleConfig().set_settle_error(5).set_settle_time(20).set_timeout(500)));
+        error_vec = target - this->get_position();
+    }
+
+    float heading_error = to_deg(error_vec.heading())-get_absolute_heading() + heading_offset;
+    if (config.direction == FLEXIBLE)
+        heading_error = reduce_negative_90_to_90(heading_error);
+    else
+        heading_error = reduce_negative_180_to_180(heading_error);
+        
+    PID drivePID(error_vec.norm(), config.drive_pid, config.settle_conditions);
+    PID headingPID(heading_error, config.heading_pid);
 
     while(!this->stop_auton && !drivePID.is_settled(this->get_current())){
-        auto vector_to_robot = this->get_position() - pos;
-        float drive_error = vector_to_robot.norm();
-        float heading_error = reduce_negative_180_to_180(to_deg(vector_to_robot.heading()) - get_absolute_heading());
+        error_vec = target - this->get_position();
+
+        float drive_error = error_vec.norm();
         float drive_output = drivePID.compute(drive_error);
 
-        float heading_scale_factor = cos(to_rad(heading_error));
+        float heading_error = to_deg(error_vec.heading()) - get_absolute_heading() + heading_offset;
+        float cosine_scale = cos(to_rad(heading_error));
 
-        switch (config.direction) {
-            case FORWARD:
-                heading_scale_factor = fmaxf(0, heading_scale_factor);
-                break;
-            case REVERSE:
-                heading_scale_factor = fminf(0, -heading_scale_factor);
-                break;
-            case FLEXIBLE:
-                heading_error = reduce_negative_90_to_90(heading_error);
-                break;
+        if (config.direction == FLEXIBLE) {
+            heading_error = reduce_negative_90_to_90(heading_error);
+        } else {
+            heading_error = reduce_negative_180_to_180(heading_error);
+            if (config.direction == REVERSE)
+                cosine_scale = -cosine_scale;
         }
 
-        drive_output *= heading_scale_factor;
         float heading_output = headingPID.compute(heading_error);
-        
-        if (drive_error < config.settle_conditions.settle_error) { heading_output = 0; }
 
-        float scaled_drive_max_voltage = fabs(heading_scale_factor) * config.drive_pid.max_output;
-        drive_output = clamp(drive_output, -scaled_drive_max_voltage, scaled_drive_max_voltage);
+        if (drive_error < config.settle_conditions.settle_error)
+            heading_output = 0;
+
+        drive_output = cosine_scale * clamp(drive_output, -config.drive_pid.max_output, config.drive_pid.max_output);
         heading_output = clamp(heading_output, -config.heading_pid.max_output, config.heading_pid.max_output);
 
         drive_with_voltage(drive_output-heading_output, drive_output+heading_output);
 
         task::sleep(10);
     }
+
     if (!this->stop_auton) {
         DriveL.stop(hold);
         DriveR.stop(hold);
@@ -479,84 +359,53 @@ void Drive::drive_to_point(const Vector2& pos, const DriveToPointConfig& config)
         DriveR.setStopping(coast);
         DriveL.setStopping(coast);
     }
+
+    this->desired_heading = this->get_absolute_heading();
 }
 
-void Drive::drive_to_point(float X_position, float Y_position, bool is_rigid, bool is_reverse, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time, float drive_kp, float drive_ki, float drive_kd, float drive_starti, float heading_kp, float heading_ki, float heading_kd, float heading_starti){
-    if (this->stop_auton) return;
-
-    if (is_rigid) {
-        this->turn_to_point(X_position, Y_position, is_reverse ? 180.0f : 0.0f, 500, 12, 5, 50);
-    }
-
-    PID drivePID(hypot(X_position-get_X_position(),Y_position-get_Y_position()), drive_kp, drive_ki, drive_kd, drive_starti, drive_settle_error, drive_settle_time, drive_timeout);
-    PID headingPID(reduce_negative_180_to_180(to_deg(atan2(Y_position-get_Y_position(), X_position - get_X_position()))-get_absolute_heading()), heading_kp, heading_ki, heading_kd, heading_starti);
-
-    while(!this->stop_auton && !drivePID.is_settled(this->get_current())){
-        float drive_error = hypot(X_position-get_X_position(),Y_position-get_Y_position());
-        float heading_error = reduce_negative_180_to_180(to_deg(atan2(Y_position - get_Y_position(), X_position - get_X_position())) - get_absolute_heading());
-        float drive_output = drivePID.compute(drive_error);
-
-        float heading_scale_factor = cos(to_rad(heading_error));
-        drive_output *= heading_scale_factor;
-        heading_error = reduce_negative_90_to_90(heading_error);
-        float heading_output = headingPID.compute(heading_error);
-        
-        if (drive_error<drive_settle_error) { heading_output = 0; }
-
-        float scaled_drive_max_voltage = fabs(heading_scale_factor)*drive_max_voltage;
-        drive_output = clamp(drive_output, -scaled_drive_max_voltage, scaled_drive_max_voltage);
-        heading_output = clamp(heading_output, -heading_max_voltage, heading_max_voltage);
-
-        drive_with_voltage(drive_output-heading_output, drive_output+heading_output);
-
-        std::cout << "drive_error = " << drive_error << ", drive output = " << drive_output << ", heading output = " << heading_output << std::endl;
-        task::sleep(10);
-    }
-    if (!this->stop_auton) {
-        DriveL.stop(hold);
-        DriveR.stop(hold);
-    } else {
-        DriveR.setStopping(coast);
-        DriveL.setStopping(coast);
-    }
-}
 
 void Drive::drive_to_pose(Pose target, const DriveToPoseConfig& config) {
     if (this->stop_auton) return;
 
-    const auto end_tangent = config.lead_distance * Vector2(cosf(to_rad(target.theta)), sinf(to_rad(target.theta)));
+    this->desired_heading = target.theta;
+    
+    auto direction = config.direction;
+
+    const auto end_unit_tangent = Vector2(cosf(to_rad(target.theta)), sinf(to_rad(target.theta)));
+    if (direction == FLEXIBLE) {
+        if (end_unit_tangent.dot(this->get_position() - target) < 0)
+            direction = FORWARD;
+        else
+            direction = REVERSE;
+    }
+
+    float heading_offset = (direction == REVERSE) ? 180.f : 0.f;
+    const auto end_tangent = (config.lead_distance * (float)direction) * end_unit_tangent;
     auto carrot = target.to_vector2() - (target - this->get_position()).norm() * end_tangent;
 
     PID drivePID((carrot - this->get_position()).norm(), config.drive_pid, config.settle_conditions);
-    PID headingPID(reduce_negative_180_to_180(to_deg((carrot - this->get_position()).heading()) - get_absolute_heading() + (config.direction != REVERSE ? 0.f : 180.f)), config.heading_pid);
+    PID headingPID(reduce_negative_180_to_180(to_deg((carrot - this->get_position()).heading()) - get_absolute_heading() + heading_offset), config.heading_pid);
 
-    while (!this->stop_auton && (!drivePID.is_settled())) {
+    while (!this->stop_auton && !drivePID.is_settled(this->get_current())) {
         carrot = target.to_vector2() - (target - this->get_position()).norm() * end_tangent;
         auto to_carrot = carrot - this->get_position();
 
-        float heading_error = reduce_negative_180_to_180(to_deg(to_carrot.heading()) - get_absolute_heading() + (config.direction != REVERSE ? 0.f : 180.f));
+        float heading_error = reduce_negative_180_to_180(to_deg(to_carrot.heading()) - get_absolute_heading() + heading_offset);
         float drive_error = to_carrot.norm();
-        
         float drive_output = drivePID.compute(drive_error);
+        float cosine_scale = (float)direction * cos(to_rad(heading_error));
 
-        float cosine_scale = cos(to_rad(heading_error));
-
-        if (drive_error > 2.0) {
-            heading_error = reduce_negative_90_to_90(heading_error);
-            switch (config.direction) {
-                case FORWARD:
-                    cosine_scale = fmaxf(cosine_scale, 0.0f);
-                    break;
-                case REVERSE:
-                    cosine_scale = -fmaxf(cosine_scale, 0.0f);
-                    break;
-                case FLEXIBLE:
-                    break;
-            }
+        if (drive_error < config.settle_conditions.settle_error * 4) {
+            if (drive_error < config.settle_conditions.settle_error) 
+                heading_error = reduce_negative_180_to_180(target.theta - this->get_absolute_heading());
+            else
+                heading_error = reduce_negative_90_to_90(heading_error);
         }
         
+        if (is_print_frame())
+            std::cout << "drive_error = " << drive_error << ", drive_output = " << drive_output << ", cosine scale = " << cosine_scale << std::endl;
+        
         float heading_output = headingPID.compute(heading_error);
-        if (drive_error<drive_settle_error) { heading_output = 0; }
 
         drive_output = clamp(drive_output, -config.drive_pid.max_output, config.drive_pid.max_output) * cosine_scale;
         heading_output = clamp(heading_output, -config.heading_pid.max_output, config.heading_pid.max_output);
@@ -596,7 +445,7 @@ void Drive::follow(const std::vector<Vector2>& path, const FollowConfig& config)
         this->set_brake_type(coast);
 }
 
-void Drive::follow(const std::vector<Vector2>& path) {
+/*void Drive::follow(const std::vector<Vector2>& path) {
     follow(path, follow_timeout, true, follow_max_voltage, heading_max_voltage, follow_ld, follow_settle_error, follow_settle_time, follow_mu, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
 }
 
@@ -612,12 +461,12 @@ void Drive::follow(const std::vector<Vector2>& path, float follow_timeout, bool 
 }
 void Drive::follow(const std::vector<Vector2>& path, float follow_timeout, bool make_smooth, float follow_max_voltage, float heading_max_voltage, float ld, float follow_settle_error, float follow_settle_time) {
     follow(path, follow_timeout, make_smooth, follow_max_voltage, heading_max_voltage, follow_ld, follow_settle_error, follow_settle_time, follow_mu, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
-}
+}*/
 
 void Drive::follow(const std::vector<Vector2>& path, float follow_timeout, bool make_smooth, float follow_max_voltage, float heading_max_voltage, float ld, float follow_settle_error, float follow_settle_time, float follow_mu, float drive_kp, float drive_ki, float drive_kd, float drive_starti, float heading_kp, float heading_ki, float heading_kd, float heading_starti) {
     if (path.empty() || this->stop_auton) return;
     if (path.size() == 1) {
-        drive_to_point(path[0].x, path[0].y, false, false, follow_timeout, follow_max_voltage, heading_max_voltage, follow_settle_error, follow_settle_time, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
+        drive_to_point(path[0]);
         return;
     }
 
@@ -792,42 +641,6 @@ void Drive::follow(const std::vector<Waypoint>& waypoints, RAMSETEConfig config,
         this->stop(brake);
 }
 
-void Drive::turn_to_point(float X_position, float Y_position){
-    turn_to_point(X_position, Y_position, 0, turn_timeout, turn_max_voltage, turn_settle_error, turn_settle_time, turn_kp, turn_ki, turn_kd, turn_starti);
-}
-
-void Drive::turn_to_point(float X_position, float Y_position, float extra_angle_deg){
-    turn_to_point(X_position, Y_position, extra_angle_deg, turn_timeout, turn_max_voltage, turn_settle_error, turn_settle_time, turn_kp, turn_ki, turn_kd, turn_starti);
-}
-
-void Drive::turn_to_point(float X_position, float Y_position, float extra_angle_deg, float turn_timeout){
-    turn_to_point(X_position, Y_position, extra_angle_deg, turn_timeout, turn_max_voltage, turn_settle_error, turn_settle_time, turn_kp, turn_ki, turn_kd, turn_starti);
-}
-
-void Drive::turn_to_point(float X_position, float Y_position, float extra_angle_deg, float turn_timeout, float turn_max_voltage, float turn_settle_error, float turn_settle_time){
-    turn_to_point(X_position, Y_position, extra_angle_deg, turn_timeout, turn_max_voltage, turn_settle_error, turn_settle_time, turn_kp, turn_ki, turn_kd, turn_starti);
-}
-
-void Drive::turn_to_point(float X_position, float Y_position, float extra_angle_deg, float turn_timeout, float turn_max_voltage, float turn_settle_error, float turn_settle_time, float turn_kp, float turn_ki, float turn_kd, float turn_starti){
-    if (this->stop_auton) return;
-    PID turnPID(reduce_negative_180_to_180(to_deg(atan2(Y_position-get_Y_position(), X_position - get_X_position())) - get_absolute_heading() + extra_angle_deg), turn_kp, turn_ki, turn_kd, turn_starti, turn_settle_error, turn_settle_time, turn_timeout);
-    while(!this->stop_auton && !turnPID.is_settled(this->get_current())){
-        float error = reduce_negative_180_to_180(to_deg(atan2(Y_position-get_Y_position(), X_position - get_X_position())) - get_absolute_heading() + extra_angle_deg);
-        float output = turnPID.compute(error);
-        output = clamp(output, -turn_max_voltage, turn_max_voltage);
-        drive_with_voltage(-output, output);
-        task::sleep(10);
-    }
-    if (!this->stop_auton) {
-        DriveL.stop(hold);
-        DriveR.stop(hold);
-    } else {
-        DriveR.setStopping(coast);
-        DriveL.setStopping(coast);
-    }
-}
-
-
 void Drive::turn_to_point(const Vector2& pos, const TurnConfig& config) {
     this->turn_to_point(pos, 0, config);
 }
@@ -846,8 +659,10 @@ void Drive::turn_to_point(const Vector2& pos, float extra_angle_deg, const TurnC
         this->stop(brake);
     else
         this->set_brake_type(coast);
-}
 
+    this->desired_heading = this->get_absolute_heading();
+}
+/*
 void Drive::holonomic_drive_to_point(float X_position, float Y_position){
     holonomic_drive_to_point(X_position, Y_position, get_absolute_heading(), drive_timeout, drive_max_voltage, heading_max_voltage, drive_settle_error, drive_settle_time, drive_kp, drive_ki, drive_kd, drive_starti, heading_kp, heading_ki, heading_kd, heading_starti);
 }
@@ -894,7 +709,7 @@ void Drive::holonomic_drive_to_point(float X_position, float Y_position, float a
     DriveLB.stop(hold);
     DriveRB.stop(hold);
     DriveRF.stop(hold);
-}
+}*/
 
 void Drive::holonomic_drive_to_point(const Vector2& pos, const HolonomicDriveToPointConfig& config) {
     this->holonomic_drive_to_point({pos, this->desired_heading}, config);

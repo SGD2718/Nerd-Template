@@ -1,6 +1,6 @@
 #pragma once
 #include "vex.h"
-#include "config-structs.h"
+//#include "config-structs.h"
 #include "odom.h"
 
 class Odom;
@@ -20,8 +20,6 @@ class Drive
 {
 private:
   float wheel_diameter;
-  float motor_rpm;
-  float drive_rpm;
   float wheel_ratio;
   float gyro_scale;
   float drive_in_to_deg_ratio;
@@ -48,25 +46,12 @@ public:
   encoder E_ForwardTracker;
   encoder E_SidewaysTracker;
 
-  float turn_max_voltage;
-  float turn_kp;
-  float turn_ki;
-  float turn_kd;
-  float turn_starti;
-
-  float turn_settle_error;
-  float turn_settle_time;
-  float turn_timeout;
+  float motor_rpm;
+  float drive_rpm;
 
   FollowConfig follow_config;
   DriveToPointConfig drive_to_point_config;
   VelocityControllerConfig velocity_controller_config;
-
-  float drive_max_voltage;
-  float drive_kp;
-  float drive_ki;
-  float drive_kd;
-  float drive_starti;
   
   float follow_mu;
   float follow_min_ld;
@@ -80,32 +65,8 @@ public:
   float follow_settle_error;
   float follow_settle_time;
   float follow_timeout;
-
-  float drive_settle_error;
-  float drive_settle_time;
-  float drive_timeout;
-
-  float drive_continue_error;
-  float drive_continue_time;
-
-  float heading_max_voltage;
-  float heading_kp;
-  float heading_ki;
-  float heading_kd;
-  float heading_starti;
-
-  float swing_max_voltage;
-  float swing_kp;
-  float swing_ki;
-  float swing_kd;
-  float swing_starti;
-
-  float swing_settle_error;
-  float swing_settle_time;
-  float swing_timeout;
   
   float desired_heading;
-
   float width;
 
   bool stop_auton = false;
@@ -132,6 +93,10 @@ public:
   void drive_with_voltage(float leftVoltage, float rightVoltage);
   void drive_keep_turn_rate(float leftVoltage, float rightVoltage);
 
+  float get_velocity_volts();
+  float get_left_velocity_volts();
+  float get_right_velocity_volts();
+
   float get_absolute_heading();
 
   float get_left_position_in();
@@ -141,34 +106,13 @@ public:
   float get_current();
   float get_holonomic_current();
 
-  void set_turn_constants(float turn_max_voltage, float turn_kp, float turn_ki, float turn_kd, float turn_starti); 
-  void set_drive_constants(float drive_max_voltage, float drive_kp, float drive_ki, float drive_kd, float drive_starti);
-  void set_heading_constants(float heading_max_voltage, float heading_kp, float heading_ki, float heading_kd, float heading_starti);
-  void set_swing_constants(float swing_max_voltage, float swing_kp, float swing_ki, float swing_kd, float swing_starti);
   void set_follow_constants(float follow_max_voltage, float follow_max_acceleration, float follow_max_applicable_curvature_radius, float follow_min_ld, float follow_max_ld, float follow_k_ld);
-
-  void set_turn_exit_conditions(float turn_settle_error, float turn_settle_time, float turn_timeout);
-  void set_drive_exit_conditions(float drive_settle_error, float drive_settle_time, float drive_timeout, float drive_continue_error, float drive_continue_time);
-  void set_swing_exit_conditions(float swing_settle_error, float swing_settle_time, float swing_timeout);
   void set_follow_exit_conditions(float follow_settle_error, float follow_settle_time, float follow_timeout);
 
   void set_brake_type(vex::brakeType mode);
 
-  //void turn_to_angle(float angle);
-  void turn_to_angle(float angle, float turn_timeout);
-  void turn_to_angle(float angle, float turn_timeout, float turn_max_voltage);
-  void turn_to_angle(float angle, float turn_timeout, float turn_max_voltage, float turn_settle_error, float turn_settle_time);
-  void turn_to_angle(float angle, float turn_timeout, float turn_max_voltage, float turn_settle_error, float turn_settle_time, float turn_kp, float turn_ki, float turn_kd, float turn_starti);
-
   void turn_to_angle(float angle, const TurnConfig& config = {});
-
   void drive_time(float time, float left_voltage, float right_voltage, bool stop = true);
-  //void drive_distance(float distance);
-  //void drive_distance(float distance, float heading);
-  void drive_distance(float distance, float heading, float drive_timeout);
-  void drive_distance(float distance, float heading, float drive_timeout, float drive_max_voltage, float heading_max_voltage);
-  void drive_distance(float distance, float heading, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time);
-  void drive_distance(float distance, float heading, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time, float drive_kp, float drive_ki, float drive_kd, float drive_starti, float heading_kp, float heading_ki, float heading_kd, float heading_starti);
 
   void drive_distance(float distance, const DriveDistanceConfig& config = {});
   void drive_distance(float distance, float heading, const DriveDistanceConfig& config = {});
@@ -192,12 +136,6 @@ public:
   float get_max_velocity() const;
 
   void drive_to_point(const Vector2& pos, const DriveToPointConfig& config = {});
-
-  void drive_to_point(float X_position, float Y_position, bool is_rigid=false, bool is_reverse=false);
-  void drive_to_point(float X_position, float Y_position, bool is_rigid, bool is_reverse, float drive_timeout);
-  void drive_to_point(float X_position, float Y_position, bool is_rigid, bool is_reverse, float drive_timeout, float drive_max_voltage, float heading_max_voltage);
-  void drive_to_point(float X_position, float Y_position, bool is_rigid, bool is_reverse, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time);
-  void drive_to_point(float X_position, float Y_position, bool is_rigid, bool is_reverse, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time, float drive_kp, float drive_ki, float drive_kd, float drive_starti, float heading_kp, float heading_ki, float heading_kd, float heading_starti);
   
   /**
    * @brief Drive to pose (x, y, θ) using boomerang.
@@ -211,23 +149,7 @@ public:
    *    - heading_max_voltage: maximum voltage used to control heading
    *    - settle_conditions: settle error, settle time, timeout, and max_current.
   */
-  void drive_to_pose(Pose pose, const DriveToPoseConfig& config = DRIVE_TO_POSE_BOOMERANG_DEFAULT);
-
-  /*
-  void boomerang(float X_position, float Y_position, float heading, bool reverse = false, float lead_distance = 14);
-  void boomerang(float X_position, float Y_position, float heading, bool reverse, float lead_distance, float drive_timeout);
-  void boomerang(float X_position, float Y_position, float heading, bool reverse, float lead_distance, float drive_timeout, float drive_max_voltage, float heading_max_voltage);
-  void boomerang(float X_position, float Y_position, float heading, bool reverse, float lead_distance, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time);
-  void boomerang(float X_position, float Y_position, float heading, bool reverse, float lead_distance, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_settle_error, float drive_settle_time, float drive_kp, float drive_ki, float drive_kd, float drive_starti, float heading_kp, float heading_ki, float heading_kd, float heading_starti);
-  */
-  /*
-  void drive_through_points(const std::vector<Vector2>& path);
-  void drive_through_points(const std::vector<Vector2>& path, float drive_timeout);
-  void drive_through_points(const std::vector<Vector2>& path, float drive_timeout, float drive_max_voltage, float heading_max_voltage);
-  void drive_through_points(const std::vector<Vector2>& path, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_continue_error, float drive_continue_time);
-  void drive_through_points(const std::vector<Vector2>& path, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_continue_error, float drive_continue_time, float drive_settle_error, float drive_settle_time);
-  void drive_through_points(const std::vector<Vector2>& path, float drive_timeout, float drive_max_voltage, float heading_max_voltage, float drive_continue_error, float drive_continue_time, float drive_settle_error, float drive_settle_time, float drive_kp, float drive_ki, float drive_kd, float drive_starti, float heading_kp, float heading_ki, float heading_kd, float heading_starti);
-  */
+  void drive_to_pose(Pose pose, const DriveToPoseConfig& config = ::DRIVE_TO_POSE_BOOMERANG_DEFAULT);
 
   void follow(const std::vector<Vector2>& path);
   void follow(const std::vector<Vector2>& path, float follow_timeout, bool make_smooth = true);
@@ -240,12 +162,6 @@ public:
 
   //void follow(const std::vector<Vector2>& path);
   void follow(const std::vector<Vector2>& path, const FollowConfig& config);
-  
-  void turn_to_point(float X_position, float Y_position);
-  void turn_to_point(float X_position, float Y_position, float extra_angle_deg);
-  void turn_to_point(float X_position, float Y_position, float extra_angle_deg, float turn_timeout);
-  void turn_to_point(float X_position, float Y_position, float extra_angle_deg, float turn_timeout, float turn_max_voltage, float turn_settle_error, float turn_settle_time);
-  void turn_to_point(float X_position, float Y_position, float extra_angle_deg, float turn_timeout, float turn_max_voltage, float turn_settle_error, float turn_settle_time, float turn_kp, float turn_ki, float turn_kd, float turn_starti);
   
   void turn_to_point(const Vector2& pos, const TurnConfig& config = {});
   void turn_to_point(const Vector2& pos, float extra_angle_deg, const TurnConfig& config = {});

@@ -225,6 +225,14 @@ float volt_to_rpm(float rotational_velocity, float motor_rpm) {
   return motor_rpm / 12.0f * rotational_velocity;
 }
 
+float rpm_to_pct(float rotational_velocity, float motor_rpm) {
+  return 100.f / motor_rpm * rotational_velocity;
+}
+
+float pct_to_rpm(float rotational_velocity, float motor_rpm) {
+  return motor_rpm / 100.f * rotational_velocity;
+}
+
 float three_point_circle_radius(Vector2 P, Vector2 Q, Vector2 R) {
   auto x1 = P.x, y1 = P.y, x2 = Q.x, y2 = Q.y, x3 = R.x, y3 = R.y;
 
@@ -358,4 +366,8 @@ bool is_approximately_constant(const std::vector<float>& data, float percent_tol
 
 float fsign(float x) {
     return x > 0 ? 1 : x < 0 ? -1 : 0;
+}
+
+bool is_print_frame() {
+    return vex::timer::system() / 8 % 8 == 0;
 }

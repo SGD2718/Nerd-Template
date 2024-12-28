@@ -32,6 +32,10 @@ float rpm_to_volt(float rotational_velocity, float motor_rpm=200);
 
 float volt_to_rpm(float rotational_velocity, float motor_rpm=200);
 
+float rpm_to_pct(float rotational_velocity, float motor_rpm=200);
+
+float pct_to_rpm(float rotational_velocity, float motor_rpm=200);
+
 float clamp(float input, float min, float max);
 
 bool is_reversed(double input);
@@ -84,3 +88,5 @@ float three_point_circle_radius(Vector2 a, Vector2 b, Vector2 c);
 namespace std {
   float stof(const std::string &str);
 }
+
+bool is_print_frame();

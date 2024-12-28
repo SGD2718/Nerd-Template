@@ -9,8 +9,8 @@ public:
     void update(float error);
 
     bool is_settled() const;
-    bool is_early_stop(float current) const;
-    bool is_exit(float current) const;
+    bool is_early_stop(float current);
+    bool is_exit(float current);
 
     float get_time_spent_running() const;
     float get_time_spent_settled() const;
@@ -25,4 +25,5 @@ private:
     unsigned int time_spent_running = 0;
     unsigned int time_spent_settled = 0;
     unsigned int dt = 10;
+    float current_moving_avg = 0.f;
 };
