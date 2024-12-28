@@ -25,11 +25,9 @@ private:
     rotation *rotation_sensor;
 
     // TODO: Tune these
-    PID lbPID{
-        0, 0.6, 0, 0, 0, 
-        3, 10, std::numeric_limits<float>::infinity()};
+    PID lb_pid{0, 0.6, 0, 0, 0};
 
     float rest_position = 0;     // resting
-    float score_position = -162;  // position to score on wall stake
+    float score_position = -165;  // position to score on wall stake
     float idle_position = -26;    // ready for ring
 };

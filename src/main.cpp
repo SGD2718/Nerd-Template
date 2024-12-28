@@ -155,6 +155,7 @@ int subsystem_task() {
   while (true) {
     lady_brown.update();
     intake.update();
+    task::sleep(10);
   }
 }
 
@@ -162,6 +163,9 @@ void pre_auton(void) {
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
   default_constants();
+
+  std::cout << "main boomerang kp = " << DRIVE_TO_POSE_BOOMERANG_DEFAULT.drive_pid.kp << std::endl;
+  std::cout << "main drive kp = " << DRIVE_PID_DEFAULT.kp << std::endl;
 
   if (chassis.Gyro.installed()) {
     chassis.Gyro.calibrate();
@@ -182,12 +186,31 @@ void autonomous(void) {
     task::sleep(100);
   auton_running = true;
   auto_started = true;
+  std::cout << "running auton" << std::endl;
+  //chassis.set_coordinates(0, 0, 0);
+  //chassis.drive_to_point({36, 24}, DriveToPointConfig().set_is_rigid(true));
+  //chassis.drive_to_point({0, 0}, DriveToPointConfig().set_direction(REVERSE));
+  chassis.drive_distance(24, DriveDistanceConfig().set_settle_error(0.02));
+  task::sleep(500);
+  chassis.drive_distance(-24, 20, DriveDistanceConfig().set_settle_error(0.02));
+  std::cout << "auton done" << std::endl;
+  auton_running = false;
+  // Path
+  // Path
+  return;
+  chassis.follow({
+    Waypoint(0, 0, 10),
+    Waypoint(-0.597, 0.344, 10),
+    Waypoint(40.353, 22.083, 10),
+    Waypoint(30.242, 44.832, 10),
+  }, RAMSETEConfig());
+
 
   //find_tracking_center(3, 5000);
   //blue_positive();
   //red_negative();
   //blue_negative();
-  autons[current_auton_selection].auton_function();
+  //autons[current_auton_selection].auton_function();
   //chassis.drive_to_point(0, 36);
   //chassis.drive_to_point(0, 0);
   // /chassis.turn_to_angle(45);
@@ -208,31 +231,34 @@ void autonomous(void) {
 void usercontrol(void) {
   std::cout << "usercontrol started" << std::endl;
   auton_running = false;
+  chassis.set_coordinates(0,0,0);
   
 
   while(chassis.Gyro.isCalibrating()) {
      wait(100, msec);
   }
 
-  std::cout << "connected jam thing" << std::endl;
+  
+  intake.calibrate();
 
   PID alliance_stake_PID(0, 1.5, 0, 0.02, 1);
 
   Controller1.ButtonA.pressed([]() -> void {intake.set_filter_mode(RED_RINGS);});
   Controller1.ButtonX.pressed([]() -> void {intake.set_filter_mode(BLUE_RINGS);});
-  Controller1.ButtonLeft.pressed([]() -> void {intake.set_filter_mode(ALL_RINGS);});
-  //Controller1.ButtonUp.pressed([]() -> void {autonomous();});
+  Controller1.ButtonLeft.pressed([]() -> void {intake.set_filter_mode(NO_RINGS);});
+  Controller1.ButtonUp.pressed([]() -> void {
+    autonomous();
+  });
 
   Controller1.ButtonL2.pressed([]() {
     if (lady_brown.get_state() == LB_IDLE)
       lady_brown.rest();
-    else if (lady_brown.get_state() == LB_REST)
+    else if (lady_brown.get_state() == LB_REST || lady_brown.get_state() == LB_SCORE)
       lady_brown.idle();
   });
 
   Controller1.ButtonB.pressed([]() -> void {DoinkerPiston.set(!DoinkerPiston.value());});
 
-  int i = 0;
   //int length = 0;
   while (true) {
     //std::cout << "running some shit " << std::endl;
@@ -260,22 +286,18 @@ void usercontrol(void) {
       lady_brown.update();
     }
 
-    if ( i++ == 25) {
-      //std::cout << std::fixed << "(" << chassis.get_X_position() << ", " << chassis.get_Y_position() << ", " << reduce_negative_180_to_180(chassis.get_absolute_heading()) << ")" << std::endl;
-      //std::cout << std::fixed << "(" << chassis.get_left_position_in() << ", " << chassis.get_right_position_in() << ", " << reduce_negative_180_to_180(chassis.get_absolute_heading()) << ")" << std::endl;
-      i = 0;
-    }
+    if(is_print_frame())
+      if (chassis.get_current() > 3)
+        std::cout << "current = " << chassis.get_current() << std::endl;
   
     task::sleep(10); // Sleep the task for a short amount of time to prevent wasted resources.
   }
-}
+} 
 
 //
 // Main will set up the competition functions and callbacks.
 //
 int main() {
-  std::cout << "\n\n\nreighwefuhb" << std::endl;
-  
   pre_auton();
 
   // Set up callbacks for autonomous and driver control periods.
